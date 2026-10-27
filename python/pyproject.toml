@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "your-project-name"
+version = "0.1.0"
+description = "One-line description of what this project does."
+readme = "../README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Your Name", email = "you@example.com" }
+]
+
+# TODO: keep this in sync with ../project.ini (or generate it from project.ini
+# at build time via a scripts/ helper / build-backend hook — see
+# docs/architecture.md "Shared Metadata").
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    # TODO: add linters/formatters (ruff, black, mypy, etc.)
+]
+
+[project.scripts]
+your-tool = "tool.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

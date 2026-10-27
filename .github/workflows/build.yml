@@ -1,0 +1,542 @@
+# ============================================================================
+# GitHub Actions: Test, Build, and Publish a Python package to PyPI
+# ============================================================================
+#
+# CUSTOMIZE THIS REPOSITORY:
+#
+# 1. PACKAGE_IMPORT_NAME
+#       The Python import name used to find __version__.
+#
+#       Example:
+#           from my_package import __version__
+#
+#       If your package is:
+#           src/my_package/__init__.py
+#
+#       use:
+#           my_package
+#
+# 2. PYTHON_VERSION
+#       The Python version used to run the release tests.
+#
+#       Change this to the minimum/supported version appropriate for your
+#       project, or change this to a matrix if you want to test multiple
+#       Python versions.
+#
+# 3. PYTEST_ARGS
+#       Arguments passed to pytest.
+#
+#       Examples:
+#           tests
+#           tests -v
+#           tests --strict-markers
+#
+# 4. PYPI_PROJECT_NAME
+#       The name of your project on PyPI.
+#
+#       This normally matches [project] name in pyproject.toml.
+#
+# 5. PYPI_ENVIRONMENT
+#       The GitHub Environment configured for PyPI Trusted Publishing.
+#
+#       Recommended value: pypi
+#
+# 6. DOCUMENTATION_WORKFLOW_NAME
+#       The exact "name:" of your documentation workflow.
+#
+#       Example:
+#           name: Build Documentation
+#
+#       IMPORTANT:
+#       This workflow assumes that the documentation workflow is triggered
+#       by the same tagged commit and that a failed documentation workflow
+#       should prevent this release from being published.
+#
+# 7. DOCUMENTATION_WORKFLOW_FILE
+#       The filename of your documentation workflow.
+#
+#       Example:
+#           .github/workflows/docs.yml
+#
+# ============================================================================
+
+name: Publish Python Package to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Default permissions for all jobs.
+permissions:
+  contents: read
+
+# ============================================================================
+# CUSTOMIZE THIS REPOSITORY
+# ============================================================================
+
+env:
+  # --------------------------------------------------------------------------
+  # CHANGE THIS
+  #
+  # Example:
+  #     src/my_package/__init__.py
+  #
+  # would mean:
+  #     PACKAGE_IMPORT_NAME: my_package
+  # --------------------------------------------------------------------------
+  PACKAGE_IMPORT_NAME: "YOUR_PACKAGE_IMPORT_NAME"
+
+  # --------------------------------------------------------------------------
+  # CHANGE THIS
+  #
+  # Example:
+  #     3.12
+  #
+  # This is the Python version used for the release test.
+  # --------------------------------------------------------------------------
+  PYTHON_VERSION: "3.12"
+
+  # --------------------------------------------------------------------------
+  # CHANGE THIS if your tests live somewhere other than "tests".
+  #
+  # Examples:
+  #     tests
+  #     tests -v
+  #     tests --strict-markers
+  # --------------------------------------------------------------------------
+  PYTEST_ARGS: "tests"
+
+  # --------------------------------------------------------------------------
+  # CHANGE THIS
+  #
+  # This is the name shown on PyPI.
+  #
+  # Usually this should match:
+  #
+  #     [project]
+  #     name = "YOUR-PYPI-PROJECT-NAME"
+  #
+  # in pyproject.toml.
+  # --------------------------------------------------------------------------
+  PYPI_PROJECT_NAME: "YOUR-PYPI-PROJECT-NAME"
+
+  # --------------------------------------------------------------------------
+  # Usually leave this as "pypi".
+  #
+  # This must match the GitHub Environment used when configuring PyPI
+  # Trusted Publishing.
+  # --------------------------------------------------------------------------
+  PYPI_ENVIRONMENT: "pypi"
+
+  # --------------------------------------------------------------------------
+  # CHANGE THIS
+  #
+  # Exact "name:" value from your documentation workflow.
+  #
+  # Example:
+  #
+  #     name: Build Documentation
+  #
+  # Do NOT put the YAML filename here.
+  # --------------------------------------------------------------------------
+  DOCUMENTATION_WORKFLOW_NAME: "YOUR DOCUMENTATION WORKFLOW NAME"
+
+# ============================================================================
+# JOB 1: Verify the release
+# ============================================================================
+#
+# This job:
+#   - checks out the tagged source
+#   - installs the project
+#   - reads __version__
+#   - compares it to the Git tag
+#   - runs pytest
+#
+# Nothing gets published if this job fails.
+# ============================================================================
+
+jobs:
+
+  verify:
+    name: Verify version and run tests
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ----------------------------------------------------------------------
+      # Checkout the exact commit associated with the tag.
+      # ----------------------------------------------------------------------
+      - name: Check out tagged source
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # ----------------------------------------------------------------------
+      # Set up Python.
+      # ----------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # ----------------------------------------------------------------------
+      # Upgrade packaging tools.
+      # ----------------------------------------------------------------------
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      # ----------------------------------------------------------------------
+      # Install the package and its normal dependencies.
+      #
+      # This assumes your pyproject.toml correctly declares runtime
+      # dependencies.
+      # ----------------------------------------------------------------------
+      - name: Install package
+        run: python -m pip install .
+
+      # ----------------------------------------------------------------------
+      # Install pytest.
+      #
+      # If pytest is already declared in a development/test dependency group
+      # in your project, you can instead install that group here.
+      #
+      # Examples:
+      #
+      #   pip install ".[test]"
+      #
+      # or, with newer packaging configuration:
+      #
+      #   pip install --group test
+      #
+      # Adjust this section to match your project.
+      # ----------------------------------------------------------------------
+      - name: Install pytest
+        run: python -m pip install pytest
+
+      # ----------------------------------------------------------------------
+      # Extract the package version from __version__.
+      #
+      # IMPORTANT:
+      # PACKAGE_IMPORT_NAME must be customized above.
+      # ----------------------------------------------------------------------
+      - name: Read package version
+        id: package_version
+        shell: bash
+        run: |
+          PACKAGE_VERSION="$(
+            python -c \
+              "from $PACKAGE_IMPORT_NAME import __version__; print(__version__)"
+          )"
+
+          echo "Package version: $PACKAGE_VERSION"
+
+          if [ -z "$PACKAGE_VERSION" ]; then
+            echo "ERROR: Could not determine package version."
+            exit 1
+          fi
+
+          echo "version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------
+      # Compare the package version against the Git tag.
+      #
+      # Expected:
+      #
+      #     __version__ = "1.2.3"
+      #     Git tag      = v1.2.3
+      #
+      # ----------------------------------------------------------------------
+      - name: Verify version matches Git tag
+        shell: bash
+        env:
+          PACKAGE_VERSION: ${{ steps.package_version.outputs.version }}
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+
+          echo "Package version: $PACKAGE_VERSION"
+          echo "Git tag version: $TAG_VERSION"
+
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo ""
+            echo "ERROR: Package version does not match Git tag."
+            echo ""
+            echo "Expected:"
+            echo "  __version__ = \"$TAG_VERSION\""
+            echo "  Git tag      = v$TAG_VERSION"
+            echo ""
+            echo "Found:"
+            echo "  __version__ = \"$PACKAGE_VERSION\""
+            echo "  Git tag      = v$TAG_VERSION"
+            echo ""
+            exit 1
+          fi
+
+          echo "Version and Git tag match."
+
+      # ----------------------------------------------------------------------
+      # Run pytest.
+      #
+      # IMPORTANT:
+      #
+      # pytest considers expected failures (xfail) successful test outcomes.
+      #
+      # Therefore:
+      #
+      #     @pytest.mark.xfail
+      #
+      # does NOT cause this command to fail when the expected failure occurs.
+      #
+      # An unexpected XPASS is also normally considered non-failing unless
+      # strict xfail is enabled.
+      #
+      # If your project deliberately uses strict xfail, pytest will correctly
+      # fail the release if an xfail unexpectedly passes.
+      # ----------------------------------------------------------------------
+      - name: Run pytest
+        run: python -m pytest ${{ env.PYTEST_ARGS }}
+
+  # ==========================================================================
+  # JOB 2: Check documentation workflow
+  # ==========================================================================
+  #
+  # This job waits for the documentation workflow associated with this tag.
+  #
+  # If documentation fails, this job fails and publishing cannot proceed.
+  #
+  # IMPORTANT:
+  #
+  # GitHub Actions does not have a simple "needs another independently
+  # triggered workflow" dependency. Therefore this job queries GitHub's API
+  # for the documentation workflow run associated with the current commit.
+  #
+  # ==========================================================================
+
+  documentation:
+    name: Verify documentation workflow
+    runs-on: ubuntu-latest
+    needs:
+      - verify
+
+    steps:
+
+      # ----------------------------------------------------------------------
+      # Wait for the documentation workflow for this exact commit.
+      #
+      # CUSTOMIZE:
+      #   DOCUMENTATION_WORKFLOW_FILE
+      #
+      # ----------------------------------------------------------------------
+      - name: Wait for documentation workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DOC_WORKFLOW: ".github/workflows/YOUR-DOCUMENTATION-WORKFLOW.yml"
+        shell: bash
+        run: |
+          set -e
+
+          echo "Waiting for documentation workflow:"
+          echo "$DOC_WORKFLOW"
+          echo ""
+          echo "Commit:"
+          echo "${GITHUB_SHA}"
+          echo ""
+
+          for attempt in {1..60}; do
+
+            RUN_JSON="$(
+              gh api \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/${DOC_WORKFLOW}/runs" \
+                --method GET \
+                -f head_sha="${GITHUB_SHA}" \
+                -f event="push" \
+                -f per_page=10
+            )"
+
+            RUN_COUNT="$(
+              echo "$RUN_JSON" | jq '.workflow_runs | length'
+            )"
+
+            if [ "$RUN_COUNT" -gt 0 ]; then
+
+              STATUS="$(
+                echo "$RUN_JSON" |
+                  jq -r '.workflow_runs[0].status'
+              )"
+
+              CONCLUSION="$(
+                echo "$RUN_JSON" |
+                  jq -r '.workflow_runs[0].conclusion'
+              )"
+
+              RUN_URL="$(
+                echo "$RUN_JSON" |
+                  jq -r '.workflow_runs[0].html_url'
+              )"
+
+              echo "Documentation workflow:"
+              echo "  status:     $STATUS"
+              echo "  conclusion: $CONCLUSION"
+              echo "  URL:        $RUN_URL"
+              echo ""
+
+              if [ "$STATUS" = "completed" ]; then
+
+                if [ "$CONCLUSION" = "success" ]; then
+                  echo "Documentation workflow succeeded."
+                  exit 0
+                fi
+
+                echo "ERROR: Documentation workflow failed."
+                exit 1
+              fi
+
+              echo "Documentation workflow is still running."
+
+            else
+              echo "Documentation workflow has not started yet."
+            fi
+
+            echo "Waiting 10 seconds..."
+            sleep 10
+
+          done
+
+          echo "ERROR: Timed out waiting for documentation workflow."
+          exit 1
+
+  # ==========================================================================
+  # JOB 3: Build the package
+  # ==========================================================================
+  #
+  # This only runs if BOTH:
+  #
+  #   verify documentation
+  #
+  # succeed.
+  #
+  # The build output is saved as a GitHub Actions artifact.
+  #
+  # ==========================================================================
+
+  build:
+    name: Build Python distributions
+    runs-on: ubuntu-latest
+
+    needs:
+      - verify
+      - documentation
+
+    steps:
+
+      - name: Check out tagged source
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Install build
+        run: python -m pip install --upgrade build
+
+      # ----------------------------------------------------------------------
+      # Build:
+      #
+      #   dist/*.whl
+      #   dist/*.tar.gz
+      #
+      # ----------------------------------------------------------------------
+      - name: Build distributions
+        run: python -m build
+
+      # ----------------------------------------------------------------------
+      # Verify the generated distribution metadata.
+      # ----------------------------------------------------------------------
+      - name: Check distributions
+        run: |
+          python -m pip install twine
+          python -m twine check dist/*
+
+      # ----------------------------------------------------------------------
+      # Store the distributions for the publishing job.
+      # ----------------------------------------------------------------------
+      - name: Upload distributions
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  # ==========================================================================
+  # JOB 4: Publish to PyPI
+  # ==========================================================================
+  #
+  # This is the ONLY job with permission to publish to PyPI.
+  #
+  # It can only execute if:
+  #
+  #   1. version/tag comparison passed
+  #   2. pytest passed
+  #   3. documentation workflow passed
+  #   4. package build passed
+  #
+  # ==========================================================================
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+
+    needs:
+      - verify
+      - documentation
+      - build
+
+    # ------------------------------------------------------------------------
+    # CUSTOMIZE:
+    #
+    # This GitHub Environment must match the environment configured as the
+    # Trusted Publisher on PyPI.
+    #
+    # Recommended name:
+    #
+    #     pypi
+    #
+    # ------------------------------------------------------------------------
+    environment:
+      name: pypi
+
+      # ----------------------------------------------------------------------
+      # CUSTOMIZE:
+      #
+      # Replace YOUR-PYPI-PROJECT-NAME with the actual PyPI project name.
+      # ----------------------------------------------------------------------
+      url: https://pypi.org/p/YOUR-PYPI-PROJECT-NAME
+
+    # ------------------------------------------------------------------------
+    # REQUIRED for PyPI Trusted Publishing.
+    #
+    # No PYPI_API_TOKEN is necessary.
+    # ------------------------------------------------------------------------
+    permissions:
+      id-token: write
+
+    steps:
+
+      # ----------------------------------------------------------------------
+      # Download exactly the distributions produced by the build job.
+      # ----------------------------------------------------------------------
+      - name: Download distributions
+        uses: actions/download-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      # ----------------------------------------------------------------------
+      # Publish to PyPI.
+      #
+      # Authentication is handled using GitHub OIDC / PyPI Trusted Publishing.
+      # ----------------------------------------------------------------------
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
