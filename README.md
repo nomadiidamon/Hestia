@@ -1,6 +1,7 @@
-# Project Name
+# Hestia
 
-> One-line description of what this project does.
+> Cross-platform hardware discovery, software/CLI tool and version detection from
+> `PATH`, and AI model information and recommendations for local systems.
 
 A dual-language implementation provided in both **C++** and **Python**, sharing
 the same design, semantics, and versioning, under one repository.
