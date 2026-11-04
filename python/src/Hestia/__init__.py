@@ -1,15 +1,10 @@
-"""your_project
+﻿"""Hestia - system discovery and AI model intelligence."""
 
-Placeholder package. Replace with real library source.
-"""
-
-__all__ = ["placeholder_add"]
+from .models import ModelInfo, get_model_info
+from .types import AcceleratorType, ModelSize
 
 
-def placeholder_add(a: int, b: int) -> int:
-    """Return a + b.
+__version__ = "0.1.0"
 
-    Exists only so the package and its tests/build wiring have something
-    concrete to work with.
-    """
-    return a + b
+
+__all__ = ["AcceleratorType", "ModelSize", "ModelInfo", "get_model_info"]

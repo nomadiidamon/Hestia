@@ -1,31 +1,37 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Hestia"
+name = "hestia-system"
 version = "0.1.0"
-description = "One-line description of what this project does."
+description = "System discovery, hardware and software analysis, and AI model intelligence."
 readme = "../README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
     { name = "Your Name", email = "you@example.com" }
 ]
 
-# TODO: keep this in sync with ../project.ini (or generate it from project.ini
-# at build time via a scripts/ helper / build-backend hook — see
-# docs/architecture.md "Shared Metadata").
-dependencies = []
-
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    # TODO: add linters/formatters (ruff, black, mypy, etc.)
+# TODO: keep this in sync with ../project.ini (see docs/Architecture.md "Shared Metadata").
+dependencies = [
+    "psutil>=5.9.0",
 ]
 
-[project.scripts]
-your-tool = "tool.main:main"
+[project.optional-dependencies]
+nvidia = [
+    "nvidia-ml-py>=12.0.0",
+]
+dev = [
+    "pytest>=7.0",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
