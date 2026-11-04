@@ -10,27 +10,27 @@ the same design, semantics, and versioning, under one repository.
 
 ```
 .
-├── cpp/                  # C++ implementation (premake5)
-│   ├── src/
-│   ├── scripts/
-│   └── tool/
-├── python/               # Python implementation (pyproject.toml)
-│   ├── src/
-│   ├── scripts/
-│   └── tool/
-├── examples/             # Usage examples for both languages
-│   ├── cpp/
-│   └── python/
-├── docs/                 # Shared + per-language documentation
-│   ├── architecture.md
-│   ├── concepts.md
-│   ├── semantics.md
-│   ├── cpp/README.md
-│   └── python/README.md
-├── .github/workflows/    # CI: build + documentation
-├── project.ini           # Shared metadata read by both languages
-├── LICENSE
-└── README.md
++-- cpp/                  # C++ implementation (premake5)
+|   +-- src/
+|   +-- scripts/
+|   `-- tool/
++-- python/               # Python implementation (pyproject.toml)
+|   +-- src/
+|   +-- scripts/
+|   `-- tool/
++-- examples/             # Usage examples for both languages
+|   +-- cpp/
+|   `-- python/
++-- docs/                 # Shared + per-language documentation
+|   +-- architecture.md
+|   +-- concepts.md
+|   +-- semantics.md
+|   +-- cpp/README.md
+|   `-- python/README.md
++-- .github/workflows/    # CI: build + documentation
++-- project.ini           # Shared metadata read by both languages
++-- LICENSE
+`-- README.md
 ```
 
 ## Quick Start
@@ -76,7 +76,7 @@ from this file so version numbers and metadata never drift apart. See
 ## Contributing
 
 PRs welcome. Please keep behavior parity between the C++ and Python
-implementations — see `docs/semantics.md` before changing observable behavior
+implementations - see `docs/semantics.md` before changing observable behavior
 in either language.
 
 ## License

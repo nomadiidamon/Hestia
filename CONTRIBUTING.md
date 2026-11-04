@@ -33,7 +33,7 @@ See [`docs/architecture.md`](docs/architecture.md) for the full layout.
 1. **Fork the Repository** using the "Fork" button on the repository page.
 2. **Clone Your Fork**:
 ```bash
-git clone --recursive https://github.com/<your-user>/<repo-name> <desiredLocation>
+git clone --recursive https://github.com/nomadiidamon/Hestia <desiredLocation>
 ```
 3. **Set Up the Development Environment** for the language(s) you are working on (see below).
 4. **Create a Branch** with a descriptive name for your feature or fix.

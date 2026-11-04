@@ -1,17 +1,55 @@
-# --- C++ / premake5 ---
-cpp/build/
+# Python
+
+## Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+## Virtual environment
+.venv/
+venv/
+## PyTest
+.pytest_cache/
+python/tests/test_output.txt
+## VS Code settings
+.vscode/
+## Build artifacts
+build/
+
+
+
+# C++
+
+## C++ artifacts
 *.o
 *.obj
 *.exe
 *.out
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.pdb
+*.ilk
+*.exp
 
-# --- Python ---
-python/.venv/
-python/**/__pycache__/
-python/**/*.pyc
-python/*.egg-info/
-python/dist/
-python/build/
+## Premake5 generated
+bin/
+bin-int/
+obj/
+*.sln
+*.vcxproj*
+Makefile
+*.make
+.vs/
+
+
 
 # --- General ---
 .DS_Store

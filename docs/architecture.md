@@ -1,7 +1,7 @@
 # Architecture
 
 This document describes how this repository is organized and why, so that
-anyone adding code, docs, or CI can find — and keep finding — the right place
+anyone adding code, docs, or CI can find - and keep finding - the right place
 for it.
 
 ## Goals
@@ -24,37 +24,37 @@ for it.
 
 ```
 .
-├── cpp/
-│   ├── premake5.lua        # Build configuration entry point
-│   ├── include/            # Include dir for users
-│   ├── src/                # Library/application source
-│   ├── scripts/            # Dev scripts: build helpers, codegen, formatting
-│   └── tool/               # Standalone CLI tool(s) built from this tree
-│
-├── python/
-│   ├── pyproject.toml      # Build/packaging configuration entry point
-│   ├── src/                # Package source
-│   ├── scripts/            # Dev scripts: build helpers, release, formatting
-│   └── tool/               # Standalone CLI tool(s) built from this tree
-│
-├── examples/
-│   ├── cpp/                # Example programs using the C++ implementation
-│   └── python/             # Example programs using the Python implementation
-│
-├── docs/
-│   ├── architecture.md     # This file
-│   ├── concepts.md         # Core concepts shared by both implementations
-│   ├── semantics.md        # Behavioral guarantees both languages must uphold
-│   ├── cpp/README.md       # C++-specific build/dev/contributor notes
-│   └── python/README.md    # Python-specific build/dev/contributor notes
-│
-├── .github/workflows/
-│   ├── build.yml            # CI: builds/tests both cpp/ and python/
-│   └── documentation.yml    # CI: validates/publishes docs/
-│
-├── project.ini              # Shared metadata: version, contributors, etc.
-├── README.md                 # Repo-level overview and quick start
-└── LICENSE
++-- cpp/
+|   +-- premake5.lua        # Build configuration entry point
+|   +-- include/            # Include dir for users
+|   +-- src/                # Library/application source
+|   +-- scripts/            # Dev scripts: build helpers, codegen, formatting
+|   +-- tool/               # Standalone CLI tool(s) built from this tree
+|
++-- python/
+|   +-- pyproject.toml      # Build/packaging configuration entry point
+|   +-- src/                # Package source
+|   +-- scripts/            # Dev scripts: build helpers, release, formatting
+|   +-- tool/               # Standalone CLI tool(s) built from this tree
+|
++-- examples/
+|   +-- cpp/                # Example programs using the C++ implementation
+|   +-- python/             # Example programs using the Python implementation
+|
++-- docs/
+|   +-- architecture.md     # This file
+|   +-- concepts.md         # Core concepts shared by both implementations
+|   +-- semantics.md        # Behavioral guarantees both implementations must uphold
+|   +-- cpp/README.md       # C++-specific build/dev/contributor notes
+|   +-- python/README.md    # Python-specific build/dev/contributor notes
+|
++-- .github/workflows/
+|   +-- build.yml            # CI: builds/tests both cpp/ and python/
+|   +-- documentation.yml    # CI: validates/publishes docs/
+|
++-- project.ini              # Shared metadata: version, contributors, etc.
++-- README.md                # Repo-level overview and quick start
+`-- LICENSE
 ```
 
 ## Why Separate `cpp/` and `python/` Trees
@@ -63,7 +63,7 @@ Keeping the two implementations in sibling top-level directories (rather than
 interleaving them, or nesting one inside the other) means:
 
 - Each language's native tooling can assume its own tree is the project root
-  for its purposes — premake5 doesn't need to know Python exists, and
+  for its purposes - premake5 doesn't need to know Python exists, and
   `pyproject.toml` doesn't need to know about premake5.
 - Per-language CI jobs can use a `working-directory` scoped to just that
   tree (see `.github/workflows/build.yml`).
@@ -75,12 +75,12 @@ interleaving them, or nesting one inside the other) means:
 Both `cpp/` and `python/` follow the same internal three-way split, so the
 convention only needs to be learned once:
 
-- **`src/`** — the library or application source itself; what gets built
+- **`src/`** - the library or application source itself; what gets built
   and/or published.
-- **`scripts/`** — developer-facing scripts that support working on the
+- **`scripts/`** - developer-facing scripts that support working on the
   project (build helpers, formatting, codegen, release scripts). Not part of
   the shipped artifact.
-- **`tool/`** — standalone CLI tool(s) built from this language's `src/`,
+- **`tool/`** - standalone CLI tool(s) built from this language's `src/`,
   kept separate so "library" and "thing you run" aren't tangled together.
 
 See `docs/cpp/README.md` and `docs/python/README.md` for the language-specific
@@ -98,7 +98,7 @@ against that language's published/local package.
 ## Shared Metadata: `project.ini`
 
 `project.ini` is the single place where facts that apply to the whole
-project — not just one language — are recorded: project name, version,
+project - not just one language - are recorded: project name, version,
 license, maintainers/contributors, and cross-language compatibility notes
 (e.g. minimum C++ standard, minimum Python version).
 
@@ -118,8 +118,8 @@ than duplicating values by hand.**
 
 ## Documentation Layout
 
-Shared documentation — things true of the project as a whole, independent of
-language — lives directly in `docs/`: this architecture doc, `concepts.md`,
+Shared documentation - things true of the project as a whole, independent of
+language - lives directly in `docs/`: this architecture doc, `concepts.md`,
 and `semantics.md`. Anything specific to building, testing, or contributing
 to one language's implementation lives in that language's own
 `docs/<language>/README.md`, keeping the top-level docs free of
@@ -130,9 +130,9 @@ sync across two READMEs.
 
 Two workflows, matching the two cross-cutting concerns of the repo:
 
-- **`build.yml`** — builds and tests `cpp/` and `python/` as independent
+- **`build.yml`** - builds and tests `cpp/` and `python/` as independent
   jobs (so one language failing doesn't block visibility into the other).
-- **`documentation.yml`** — validates (and optionally publishes) everything
+- **`documentation.yml`** - validates (and optionally publishes) everything
   under `docs/`.
 
 ## Adding Something New

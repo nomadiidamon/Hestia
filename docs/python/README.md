@@ -9,10 +9,10 @@ For why the repo is laid out this way, see [`../architecture.md`](../architectur
 
 ```
 python/
-├── pyproject.toml    # Build/packaging configuration
-├── src/               # Package source
-├── scripts/           # Dev scripts (build helpers, release, formatting)
-└── tool/              # Standalone CLI tool(s)
++-- pyproject.toml     # Build/packaging configuration
++-- src/               # Package source
++-- scripts/           # Dev scripts (build helpers, release, formatting)
+`-- tool/              # Standalone CLI tool(s)
 ```
 
 ## Requirements
@@ -57,5 +57,5 @@ here as it's added:
 
 This tree should derive its packaging metadata (name/version/etc.) from the
 shared [`../../project.ini`](../../project.ini) rather than hardcoding
-duplicate values in `pyproject.toml` — see "Shared Metadata" in
+duplicate values in `pyproject.toml` - see "Shared Metadata" in
 `../architecture.md` for the intended mechanism.
