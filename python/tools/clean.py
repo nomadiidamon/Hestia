@@ -1,12 +1,23 @@
 """Uninstall the editable Hestia package, then clean artifacts."""
 import argparse
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 TOOLS_DIR = Path(__file__).resolve().parent
-PACKAGE_NAME = "Hestia"
-CLEAN_TOOLS = ["Hestia"]
+PYTHON_DIR = TOOLS_DIR.parent
+PACKAGE_NAME = "hestia-system"
+CLEAN_TOOLS = sorted(p.parent.name for p in TOOLS_DIR.glob("*/clean.py"))
+ARTIFACT_DIRS = ["build", "dist", ".pytest_cache", ".mypy_cache", ".ruff_cache"]
+ARTIFACT_GLOBS = ["src/*.egg-info", "**/__pycache__"]
+
+
+def find_main_artifacts() -> list:
+    found = [PYTHON_DIR / name for name in ARTIFACT_DIRS if (PYTHON_DIR / name).exists()]
+    for pattern in ARTIFACT_GLOBS:
+        found.extend(PYTHON_DIR.glob(pattern))
+    return found
 
 
 def main() -> int:
@@ -16,7 +27,7 @@ def main() -> int:
     parser.add_argument("-y", "--yes", action="store_true", help="skip the confirmation prompt")
     args = parser.parse_args()
 
-    print("[Auctor] clean")
+    print("[Hestia] clean")
     if not args.dry_run:
         print(f"Uninstalling editable package {PACKAGE_NAME!r}...")
         subprocess.call([sys.executable, "-m", "pip", "uninstall", "-y", PACKAGE_NAME])
@@ -26,6 +37,14 @@ def main() -> int:
     for name in CLEAN_TOOLS:
         result = subprocess.call([sys.executable, str(TOOLS_DIR / name / "clean.py"), *forwarded])
         rc = rc or result
+
+    print("[Hestia] main artifacts")
+    artifacts = find_main_artifacts()
+    for path in artifacts:
+        print(f"  {path.relative_to(PYTHON_DIR)}")
+    if not args.dry_run and rc == 0:
+        for path in artifacts:
+            shutil.rmtree(path, ignore_errors=True)
     return rc
 
 
