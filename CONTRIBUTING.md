@@ -110,5 +110,5 @@ Equivalent public concepts should be recognizably the same across implementation
 - Comment only where the code cannot explain itself, such as complex logic or non-obvious constraints.
 - Keep code modular and reusable; avoid duplication.
 - Write unit tests for new features and bug fixes in each affected implementation.
-- Ensure behavior matches [`docs/semantics.md`](docs/Semantics.md).
+- Ensure behavior matches [`docs/Semantics.md`](docs/Semantics.md).
 - Update docs and examples when public behavior changes.

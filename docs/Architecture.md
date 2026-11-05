@@ -1,3 +1,5 @@
+@page Architecture Architecture
+
 # Architecture
 
 This document describes how this repository is organized and why, so that

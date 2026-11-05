@@ -1,3 +1,5 @@
+@page Semantics Semantics
+
 # Semantics
 
 This document captures the behavioral guarantees an implementation of Hestia

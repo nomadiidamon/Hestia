@@ -60,4 +60,4 @@ CI reproduction, etc.). Document each script here as it's added:
 
 This tree should read project name/version/contributors from the shared
 [`../../project.ini`](../../project.ini) rather than hardcoding them - see
-"Shared Metadata" in `../architecture.md` for the intended mechanism.
+"Shared Metadata" in `../Architecture.md` for the intended mechanism.

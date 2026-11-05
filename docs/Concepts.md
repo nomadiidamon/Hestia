@@ -1,3 +1,5 @@
+@page Concepts Concepts
+
 # Concepts
 
 This document defines the core concepts and terminology of Hestia. Anyone
