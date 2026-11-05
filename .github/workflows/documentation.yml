@@ -7,6 +7,9 @@ on:
       - 'python/src/**'
       - 'cpp/src/**'
       - 'docs/**'
+      - 'project.ini'
+      - 'examples/**'
+      - 'README.md'
       - 'Doxyfile'
       - '.github/workflows/documentation.yml'
   workflow_dispatch:
