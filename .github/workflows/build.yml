@@ -31,7 +31,7 @@ jobs:
       - name: Install package and test dependencies
         run: |
           set -euo pipefail
-          echo "Installing auctor-utils and its development dependencies..."
+          echo "Installing hestia-system and its development dependencies..."
           python -m pip install ".[dev]"
         working-directory: python
 
@@ -40,10 +40,10 @@ jobs:
         working-directory: python
         run: |
           set -euo pipefail
-          echo "Reading __version__ from Auctor..."
-          PACKAGE_VERSION="$(python -c 'from Auctor import __version__; print(__version__)')"
+          echo "Reading __version__ from Hestia..."
+          PACKAGE_VERSION="$(python -c 'from Hestia import __version__; print(__version__)')"
           if [ -z "$PACKAGE_VERSION" ]; then
-            echo "::error::Could not determine package version from Auctor.__version__."
+            echo "::error::Could not determine package version from Hestia.__version__."
             exit 1
           fi
           echo "::notice title=Package version::$PACKAGE_VERSION"
@@ -118,6 +118,26 @@ jobs:
           python -m build --verbose
         working-directory: python
 
+      - name: Verify source distribution can be rebuilt
+        run: |
+          set -euo pipefail
+          SOURCE_DIST="$(find dist -maxdepth 1 -name '*.tar.gz' -print -quit)"
+          if [ -z "$SOURCE_DIST" ]; then
+            echo "::error::No source distribution was created."
+            exit 1
+          fi
+          TMP_DIR="$(mktemp -d)"
+          trap 'rm -rf "$TMP_DIR"' EXIT
+          tar -xzf "$SOURCE_DIST" -C "$TMP_DIR"
+          SOURCE_DIR="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          if [ -z "$SOURCE_DIR" ]; then
+            echo "::error::Could not find extracted source distribution."
+            exit 1
+          fi
+          python -m build --sdist --outdir "$TMP_DIR/rebuilt" "$SOURCE_DIR"
+          python -m twine check "$TMP_DIR"/rebuilt/*
+        working-directory: python
+
       - name: Check distributions
         run: |
           set -euo pipefail
@@ -139,7 +159,7 @@ jobs:
     needs: build
     environment:
       name: pypi
-      url: https://pypi.org/p/auctor-utils
+      url: https://pypi.org/p/hestia-system
     permissions:
       id-token: write
 
