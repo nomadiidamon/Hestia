@@ -17,9 +17,6 @@ cd python
 pip install -e .
 ```
 
-See [`docs/python/README.md`](docs/python/README.md) and
-[`examples/python/`](examples/python/) for details.
-
 ## Documentation
 
 | Doc | Purpose |
@@ -27,8 +24,6 @@ See [`docs/python/README.md`](docs/python/README.md) and
 | [`docs/Architecture.md`](docs/Architecture.md) | How the repo is structured and why |
 | [`docs/Concepts.md`](docs/Concepts.md) | Core concepts shared by both implementations |
 | [`docs/Semantics.md`](docs/Semantics.md) | Behavioral guarantees both languages must uphold |
-| [`docs/cpp/README.md`](docs/cpp/README.md) | C++-specific build/dev notes |
-| [`docs/python/README.md`](docs/python/README.md) | Python-specific build/dev notes |
 
 ## Shared Metadata
 
