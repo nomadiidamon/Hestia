@@ -28,6 +28,13 @@ def main() -> int:
     args = parser.parse_args()
 
     print("[Hestia] clean")
+    artifacts = find_main_artifacts()
+    print()
+    print("[Hestia] main artifacts")
+    for path in artifacts:
+        print(f"  {path.relative_to(PYTHON_DIR)}")
+    print()
+
     if not args.dry_run:
         print(f"Uninstalling editable package {PACKAGE_NAME!r}...")
         subprocess.call([sys.executable, "-m", "pip", "uninstall", "-y", PACKAGE_NAME])
@@ -38,10 +45,6 @@ def main() -> int:
         result = subprocess.call([sys.executable, str(TOOLS_DIR / name / "clean.py"), *forwarded])
         rc = rc or result
 
-    print("[Hestia] main artifacts")
-    artifacts = find_main_artifacts()
-    for path in artifacts:
-        print(f"  {path.relative_to(PYTHON_DIR)}")
     if not args.dry_run and rc == 0:
         for path in artifacts:
             shutil.rmtree(path, ignore_errors=True)

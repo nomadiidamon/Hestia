@@ -4,16 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hestia-system"
-version = "0.1.0"
-description = "System discovery, hardware and software analysis, and AI model intelligence."
-readme = "../README.md"
-requires-python = ">=3.10"
-license = { text = "MIT" }
-authors = [
-    { name = "Your Name", email = "you@example.com" }
-]
+dynamic = ["version", "description", "readme", "license", "authors", "requires-python", "urls"]  # from ../project.ini via setup.py
 
-# TODO: keep this in sync with ../project.ini (see docs/Architecture.md "Shared Metadata").
 dependencies = [
     "psutil>=5.9.0",
 ]

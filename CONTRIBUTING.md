@@ -12,18 +12,18 @@ All contributors are expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md
 
 This repository separates **implementation** from **shared semantics and concepts**:
 
-- **Shared concepts and semantics** live in [`docs/concepts.md`](docs/concepts.md) and [`docs/semantics.md`](docs/semantics.md). They define what the project is and the behavior every implementation must uphold.
+- **Shared concepts and semantics** live in [`docs/Concepts.md`](docs/Concepts.md) and [`docs/Semantics.md`](docs/Semantics.md). They define what the project is and the behavior every implementation must uphold.
 - **Implementations** live in independent trees, each with its own idiomatic tooling:
   - [`cpp/`](cpp/) - built with premake5. See [`docs/cpp/README.md`](docs/cpp/README.md).
   - [`python/`](python/) - packaged with `pyproject.toml`. See [`docs/python/README.md`](docs/python/README.md).
 - **Shared metadata** (version, contributors, etc.) lives once in [`project.ini`](project.ini).
 - **Examples** mirror the language split under [`examples/`](examples/).
 
-See [`docs/architecture.md`](docs/architecture.md) for the full layout.
+See [`docs/Architecture.md`](docs/Architecture.md) for the full layout.
 
 ### Ground Rules
 
-- A change to behavior starts in `docs/semantics.md` (or `docs/concepts.md`), then is applied to every implementation. If you only touch one language, say so in your PR and open a follow-up issue for the other.
+- A change to behavior starts in `docs/Semantics.md` (or `docs/Concepts.md`), then is applied to every implementation. If you only touch one language, say so in your PR and open a follow-up issue for the other.
 - Do not introduce cross-language build dependencies. Each language keeps its native tooling.
 - Do not duplicate project-wide metadata; update `project.ini`.
 - Keep docs and examples in the matching language subtree.
@@ -110,5 +110,5 @@ Equivalent public concepts should be recognizably the same across implementation
 - Comment only where the code cannot explain itself, such as complex logic or non-obvious constraints.
 - Keep code modular and reusable; avoid duplication.
 - Write unit tests for new features and bug fixes in each affected implementation.
-- Ensure behavior matches [`docs/semantics.md`](docs/semantics.md).
+- Ensure behavior matches [`docs/semantics.md`](docs/Semantics.md).
 - Update docs and examples when public behavior changes.

@@ -2,9 +2,9 @@
 
 set -e
 ROOT="$(git rev-parse --show-toplevel)"
-PACKAGE_FILE="$ROOT/python/src/Hestia/__init__.py"
+PACKAGE_FILE="$ROOT/project.ini"
 DOXYFILE="$ROOT/Doxyfile"
-PACKAGE_VERSION=$(sed -n 's/^__version__ = "\([^"]*\)"/\1/p' "$PACKAGE_FILE")
+PACKAGE_VERSION=$(sed -n 's/^version[[:space:]]*=[[:space:]]*//p' "$PACKAGE_FILE" | tr -d '"[:space:]')
 DOC_VERSION=$(sed -n 's/^PROJECT_NUMBER[[:space:]]*=[[:space:]]*//p' "$DOXYFILE" | tr -d '"[:space:]')
 
 echo "Checking package version ($PACKAGE_VERSION) against Doxygen version ($DOC_VERSION)..."

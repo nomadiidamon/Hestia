@@ -2,17 +2,17 @@
 
 Build, dev, and contributor notes specific to the C++ side of this project.
 For cross-language concepts and behavior guarantees, see
-[`../concepts.md`](../concepts.md) and [`../semantics.md`](../semantics.md).
-For why the repo is laid out this way, see [`../architecture.md`](../architecture.md).
+[`../Concepts.md`](../Concepts.md) and [`../Semantics.md`](../Semantics.md).
+For why the repo is laid out this way, see [`../Architecture.md`](../Architecture.md).
 
 ## Layout
 
 ```
 cpp/
-├── premake5.lua     # Build configuration
-├── src/              # Library/application source
-├── scripts/          # Dev scripts (build helpers, formatting, codegen)
-└── tool/             # Standalone CLI tool(s)
++-- premake5.lua     # Build configuration
++-- src/              # Library/application source
++-- scripts/          # Dev scripts (build helpers, formatting, codegen)
+`-- tool/             # Standalone CLI tool(s)
 ```
 
 ## Requirements
@@ -57,5 +57,5 @@ CI reproduction, etc.). Document each script here as it's added:
 ## Versioning / Metadata
 
 This tree should read project name/version/contributors from the shared
-[`../../project.ini`](../../project.ini) rather than hardcoding them — see
+[`../../project.ini`](../../project.ini) rather than hardcoding them - see
 "Shared Metadata" in `../architecture.md` for the intended mechanism.

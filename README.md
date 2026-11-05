@@ -1,50 +1,14 @@
 # Hestia
 
-> Cross-platform hardware discovery, software/CLI tool and version detection from
-> `PATH`, and AI model information and recommendations for local systems.
+System discovery, hardware and software analysis, and AI model recommendations. A dual-language implementation provided in both **C++** and **Python**, sharing the same design, semantics, and versioning, under one repository.
 
-A dual-language implementation provided in both **C++** and **Python**, sharing
-the same design, semantics, and versioning, under one repository.
-
-## Repository Layout
-
-```
-.
-+-- cpp/                  # C++ implementation (premake5)
-|   +-- src/
-|   +-- scripts/
-|   `-- tool/
-+-- python/               # Python implementation (pyproject.toml)
-|   +-- src/
-|   +-- scripts/
-|   `-- tool/
-+-- examples/             # Usage examples for both languages
-|   +-- cpp/
-|   `-- python/
-+-- docs/                 # Shared + per-language documentation
-|   +-- architecture.md
-|   +-- concepts.md
-|   +-- semantics.md
-|   +-- cpp/README.md
-|   `-- python/README.md
-+-- .github/workflows/    # CI: build + documentation
-+-- project.ini           # Shared metadata read by both languages
-+-- LICENSE
-`-- README.md
-```
+> Hestia was developed by abstracting hardware and AI model recommendations from [Domus-AI](https://github.com/nomadiidamon/Domus-AI) and has been expounded on for a fully reusable tool.
 
 ## Quick Start
 
 ### C++
 
-```bash
-cd cpp
-premake5 gmake2   # or vs2022, xcode4, etc.
-make -C build
-```
-
-See [`docs/cpp/README.md`](docs/cpp/README.md) and
-[`examples/cpp/`](examples/cpp/) for details.
+**C++ has not yet been implemented.**
 
 ### Python
 
@@ -68,17 +32,10 @@ See [`docs/python/README.md`](docs/python/README.md) and
 
 ## Shared Metadata
 
-Project-wide values (version, contributors, project name, etc.) live in a single
-place: [`project.ini`](project.ini). Both the C++ and Python build tooling read
-from this file so version numbers and metadata never drift apart. See
-`docs/architecture.md` for how each side is expected to consume it.
+Project-wide values (version, contributors, project name, etc.) live in a single place: [`project.ini`](project.ini). Both the C++ and Python build tooling read from this file so version numbers and metadata never drift apart.
 
 ## Contributing
 
 PRs welcome. Please keep behavior parity between the C++ and Python
-implementations - see `docs/semantics.md` before changing observable behavior
-in either language.
+implementations - see [`docs/semantics.md`](docs/semantics.md) before changing observable behavior in either language.
 
-## License
-
-See [`LICENSE`](LICENSE).
