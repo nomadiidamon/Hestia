@@ -24,9 +24,9 @@ See [`docs/python/README.md`](docs/python/README.md) and
 
 | Doc | Purpose |
 |---|---|
-| [`docs/architecture.md`](docs/architecture.md) | How the repo is structured and why |
-| [`docs/concepts.md`](docs/concepts.md) | Core concepts shared by both implementations |
-| [`docs/semantics.md`](docs/semantics.md) | Behavioral guarantees both languages must uphold |
+| [`docs/Architecture.md`](docs/Architecture.md) | How the repo is structured and why |
+| [`docs/Concepts.md`](docs/Concepts.md) | Core concepts shared by both implementations |
+| [`docs/Semantics.md`](docs/Semantics.md) | Behavioral guarantees both languages must uphold |
 | [`docs/cpp/README.md`](docs/cpp/README.md) | C++-specific build/dev notes |
 | [`docs/python/README.md`](docs/python/README.md) | Python-specific build/dev notes |
 
@@ -37,5 +37,5 @@ Project-wide values (version, contributors, project name, etc.) live in a single
 ## Contributing
 
 PRs welcome. Please keep behavior parity between the C++ and Python
-implementations - see [`docs/semantics.md`](docs/semantics.md) before changing observable behavior in either language.
+implementations - see [`docs/Semantics.md`](docs/Semantics.md) before changing observable behavior in either language.
 
