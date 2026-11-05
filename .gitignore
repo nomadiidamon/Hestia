@@ -1,6 +1,7 @@
 # Python
 
 ## Python artifacts
+/python/project.ini
 __pycache__/
 *.py[cod]
 *.egg-info/

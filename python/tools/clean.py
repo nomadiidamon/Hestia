@@ -10,11 +10,13 @@ PYTHON_DIR = TOOLS_DIR.parent
 PACKAGE_NAME = "hestia-system"
 CLEAN_TOOLS = sorted(p.parent.name for p in TOOLS_DIR.glob("*/clean.py"))
 ARTIFACT_DIRS = ["build", "dist", ".pytest_cache", ".mypy_cache", ".ruff_cache"]
+ARTIFACT_FILES = ["project.ini"]
 ARTIFACT_GLOBS = ["src/*.egg-info", "**/__pycache__"]
 
 
 def find_main_artifacts() -> list:
     found = [PYTHON_DIR / name for name in ARTIFACT_DIRS if (PYTHON_DIR / name).exists()]
+    found.extend(PYTHON_DIR / name for name in ARTIFACT_FILES if (PYTHON_DIR / name).is_file())
     for pattern in ARTIFACT_GLOBS:
         found.extend(PYTHON_DIR.glob(pattern))
     return found
@@ -47,7 +49,10 @@ def main() -> int:
 
     if not args.dry_run and rc == 0:
         for path in artifacts:
-            shutil.rmtree(path, ignore_errors=True)
+            if path.is_dir():
+                shutil.rmtree(path, ignore_errors=True)
+            else:
+                path.unlink(missing_ok=True)
     return rc
 
 
