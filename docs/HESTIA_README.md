@@ -28,5 +28,5 @@ pip install -e .
 
 ## Community
 
-- [Contributing guidelines](../CONTRIBUTING.md)
-- [Code of Conduct](../CODE_OF_CONDUCT.md)
+- [Contributing guidelines](@ref contributing)
+- [Code of Conduct](@ref codeofconduct)

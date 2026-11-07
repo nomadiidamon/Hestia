@@ -131,12 +131,10 @@ jobs:
           grep -q "Top-Level Layout" docs/html/Architecture.html
           grep -q "Core Concepts" docs/html/Concepts.html
           grep -q "Catalog lookup" docs/html/Semantics.html
-          CONTRIBUTING_PAGE=$(find docs/html -maxdepth 1 -type f -iname '*CONTRIBUTING*.html' -print -quit)
-          CODE_OF_CONDUCT_PAGE=$(find docs/html -maxdepth 1 -type f -iname '*CODE_OF_CONDUCT*.html' -print -quit)
-          test -n "$CONTRIBUTING_PAGE"
-          test -n "$CODE_OF_CONDUCT_PAGE"
-          grep -q "Getting Started" "$CONTRIBUTING_PAGE"
-          grep -q "Our Pledge" "$CODE_OF_CONDUCT_PAGE"
+          test -s docs/html/contributing.html
+          test -s docs/html/codeofconduct.html
+          grep -q "Getting Started" docs/html/contributing.html
+          grep -q "Our Pledge" docs/html/codeofconduct.html
           echo "Documentation generated successfully"
 
       - name: Upload Pages artifact

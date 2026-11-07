@@ -1,4 +1,6 @@
-# Contributing Guidelines
+@page contributing Contributing Guidelines
+
+# Hestia Contributing Guidelines
 
 ## Introduction
 

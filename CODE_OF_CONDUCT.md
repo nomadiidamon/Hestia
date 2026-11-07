@@ -1,3 +1,5 @@
+@page codeofconduct Code of Conduct
+
 # Hestia Code of Conduct
 
 ## Our Pledge
