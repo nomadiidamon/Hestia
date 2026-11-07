@@ -7,6 +7,8 @@ on:
       - 'python/src/**'
       - 'cpp/src/**'
       - 'docs/**'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
       - 'project.ini'
       - 'examples/**'
       - 'README.md'
@@ -37,7 +39,7 @@ jobs:
 
       - name: Validate source encoding
         run: |
-          BAD_FILES=$(find python/src cpp/src docs -type f \( -name "*.h" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.md" \) -print0 | xargs -0 file -i | grep -v "charset=us-ascii\|charset=utf-8" || true)
+          BAD_FILES=$(find python/src cpp/src docs CONTRIBUTING.md CODE_OF_CONDUCT.md -type f \( -name "*.h" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.md" \) -print0 | xargs -0 file -i | grep -v "charset=us-ascii\|charset=utf-8" || true)
 
           if [ -n "$BAD_FILES" ]; then
             echo "Files with non UTF-8 encoding detected:"
@@ -123,6 +125,16 @@ jobs:
         run: |
           test -f docs/html/index.html
           test -f docs/html/project.ini
+          test -f docs/html/Architecture.html
+          test -f docs/html/Concepts.html
+          test -f docs/html/Semantics.html
+          test -f docs/html/CONTRIBUTING.html
+          test -f docs/html/CODE_OF_CONDUCT.html
+          grep -q "Top-Level Layout" docs/html/Architecture.html
+          grep -q "Core Concepts" docs/html/Concepts.html
+          grep -q "Catalog lookup" docs/html/Semantics.html
+          grep -q "Getting Started" docs/html/CONTRIBUTING.html
+          grep -q "Our Pledge" docs/html/CODE_OF_CONDUCT.html
           echo "Documentation generated successfully"
 
       - name: Upload Pages artifact

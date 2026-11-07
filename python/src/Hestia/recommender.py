@@ -2,6 +2,9 @@
 Model recommendations derived from hardware profiles and the catalog.
 
 @todo Update the recommendation logic to use the ModelInfo class.
+@todo Update the ModelRecommender to take a set of variables to influence the recommendation logic.
+@todo Create a generic recommendation interface that can be extended for different types of recommendations.
+@todo Create a generic recommender class that can be extended for different types of recommendations.
 """
 
 from dataclasses import asdict, dataclass

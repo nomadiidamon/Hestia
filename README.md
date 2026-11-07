@@ -21,9 +21,9 @@ pip install -e .
 
 | Doc | Purpose |
 |---|---|
-| [`docs/Architecture.md`](docs/Architecture.md) | How the repo is structured and why |
-| [`docs/Concepts.md`](docs/Concepts.md) | Core concepts shared by both implementations |
-| [`docs/Semantics.md`](docs/Semantics.md) | Behavioral guarantees both languages must uphold |
+| [Architecture](https://nomadiidamon.github.io/Hestia/Architecture.html) | How the repo is structured and why |
+| [Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html) | Core concepts shared by both implementations |
+| [Semantics](https://nomadiidamon.github.io/Hestia/Semantics.html) | Behavioral guarantees both languages must uphold |
 
 ## Shared Metadata
 
@@ -32,5 +32,5 @@ Project-wide values (version, contributors, project name, etc.) live in a single
 ## Contributing
 
 PRs welcome. Please keep behavior parity between the C++ and Python
-implementations - see [`docs/Semantics.md`](docs/Semantics.md) before changing observable behavior in either language.
+implementations - see [Semantics](https://nomadiidamon.github.io/Hestia/Semantics.html) before changing observable behavior in either language.
 

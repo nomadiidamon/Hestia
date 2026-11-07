@@ -1,6 +1,5 @@
 @page Concepts Concepts
 
-# Concepts
 
 This document defines the core concepts and terminology of Hestia. Anyone
 working in either implementation should be able to read this and understand

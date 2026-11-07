@@ -1,6 +1,5 @@
 @page Semantics Semantics
 
-# Semantics
 
 This document captures the behavioral guarantees an implementation of Hestia
 must uphold. If two implementations ever disagree on something described here,

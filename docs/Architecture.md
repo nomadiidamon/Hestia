@@ -1,6 +1,5 @@
 @page Architecture Architecture
 
-# Architecture
 
 This document describes how this repository is organized and why, so that
 anyone adding code, docs, or CI can find - and keep finding - the right place for it.
