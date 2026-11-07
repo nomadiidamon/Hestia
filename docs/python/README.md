@@ -11,9 +11,10 @@ Distribution name: `hestia-system`. Import name: `Hestia`.
 
 ## Status
 
-Implemented: `Hestia.types` and the `Hestia.models` subpackage (catalog,
-`ModelInfo`, `get_model_info()`), plus the legacy `Hestia.model_catalog` path.
-Planned: `hardware`, `software`, the recommender and the `hestia` CLI.
+Implemented: `Hestia.types`, the `Hestia.models` catalog and metadata API,
+`Hestia.hardware` detection/profile APIs, and top-level model recommendations.
+The legacy `Hestia.model_catalog` path remains available. Planned: software
+inventory and the `hestia` CLI.
 
 ## Layout
 
@@ -24,7 +25,9 @@ python/
 +-- src/Hestia/        # Package source
 |   +-- types.py
 |   +-- model_catalog.py   # Legacy path
-|   `-- models/
+|   +-- models/
+|   +-- hardware/
+|   `-- recommender.py
 +-- tests/             # pytest suite
 +-- scripts/           # clean / run_tests wrappers (.bat and .sh)
 `-- tools/             # clean.py, run_tests.py and per-sub-package tools
@@ -82,7 +85,9 @@ delegates to each `tools/<subpackage>/run_tests.py` and collects output in
 | `tools/run_tests.py` | Runs each sub-package's `run_tests.py`. |
 | `tools/clean.py` | Uninstalls the package, runs each sub-package's `clean.py`, then removes `build`, `dist`, caches, `egg-info` and `__pycache__`. Supports `--dry-run` and `-y`. |
 | `tools/models/run_tests.py` | Runs the models tests and the examples test. |
+| `tools/hardware/run_tests.py` | Runs hardware detection and recommendation tests. |
 | `tools/models/clean.py` | Cleans models-related artifacts. |
+| `tools/hardware/clean.py` | Cleans hardware-related artifacts. |
 
 To add a sub-package, create `tools/<name>/clean.py` (picked up
 automatically by `clean.py`) and add the name to `SUITES` in

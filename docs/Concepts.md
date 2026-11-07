@@ -80,9 +80,9 @@ software inventory) using the catalog.
 | Accelerator, tier | `Hestia.types.AcceleratorType`, `Hestia.types.ModelSize` |
 | Catalog | `Hestia.models.MODEL_DATABASE`, `get_tier()`, `get_category()` |
 | Catalog entry view | `Hestia.models.ModelInfo`, `get_model_info()` |
-| Hardware profile | Planned: `Hestia.hardware` |
+| Hardware profile | `Hestia.hardware.HardwareProfile`, `GPUInfo`, `HardwareDetector` |
 | Software inventory | Planned: `Hestia.software` |
-| Recommendation | Planned (depends on `hardware`) |
+| Recommendation | `Hestia.recommender.ModelRecommender`, `ModelRecommendation` |
 
 The C++ implementation is a placeholder; the Python implementation is the
 reference for now.

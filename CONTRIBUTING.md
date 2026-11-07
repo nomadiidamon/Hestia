@@ -58,7 +58,7 @@ Format code with `cpp/scripts/format.sh`.
 
 ### Python
 
-Python 3.9 or newer is required. From the `python/` directory, create a virtual environment and install the package in editable mode **with the `dev` extra**, which installs the development dependencies (pytest, linters/formatters, etc.) defined under `[project.optional-dependencies]` in `python/pyproject.toml`:
+Python 3.10 or newer is required. From the `python/` directory, create a virtual environment and install the package in editable mode **with the `dev` extra**, which installs the development dependencies (pytest, linters/formatters, etc.) defined under `[project.optional-dependencies]` in `python/pyproject.toml`:
 
 ```bash
 cd python

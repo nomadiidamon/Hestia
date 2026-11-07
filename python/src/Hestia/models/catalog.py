@@ -10,10 +10,10 @@
 # 3.) Add the field to ModelInfo in models/info.py and the ModelRecommendation dataclass
     # coding_models: List[str]
 
-# 4.) Add to ModelRecommender.recommend() in hardware.py
+# 4.) Add to ModelRecommender.recommend() in Hestia/recommender.py
     # coding_models=get_category(tier, 'coding_models'),
 
-# 5.) Add to print_hardware_report() in hardware.py
+# 5.) Add to print_hardware_report() in Hestia/recommender.py
     # if recommendation.coding_models:
         #print(f"Coding:       {', '.join(recommendation.coding_models)}")
 
@@ -22,7 +22,7 @@
 model_catalog.py - Model recommendation database for Local AI Runtime.
 
 Defines what models are appropriate per hardware tier, accelerator type,
-and capability category. Add new categories here without touching hardware.py.
+and capability category. Add new categories here without touching hardware discovery.
 
 Category keys per tier entry:
   models   - best general-purpose models for balanced use

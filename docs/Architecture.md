@@ -105,8 +105,15 @@ python/src/Hestia/
 +-- models/            # Implemented: catalog, ModelInfo, get_model_info()
 |   +-- catalog.py
 |   `-- info.py
-+-- hardware/          # Planned (see migration.md)
-`-- software/          # Planned (see migration.md)
++-- hardware/          # CPU, memory, GPU, platform and profile detection
+|   +-- cpu.py
+|   +-- memory.py
+|   +-- gpu.py
+|   +-- platform.py
+|   +-- profile.py
+|   `-- detector.py
+|-- recommender.py     # Cross-area hardware + model recommendation
+`-- software/          # Planned
 ```
 
 Dependency rules:

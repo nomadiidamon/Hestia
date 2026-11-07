@@ -1,6 +1,8 @@
+import configparser
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -67,6 +69,21 @@ def test_legacy_import_path():
 
 def test_public_api():
     assert Hestia.get_model_info is get_model_info
+
+
+def test_release_version_matches_shared_metadata_and_docs():
+    root = Path(__file__).resolve().parents[2]
+    metadata = configparser.ConfigParser()
+    metadata.read(root / "project.ini", encoding="utf-8-sig")
+    doxyfile = (root / "Doxyfile").read_text(encoding="utf-8")
+    doxy_version = next(
+        line.split("=", 1)[1].strip()
+        for line in doxyfile.splitlines()
+        if line.strip().startswith("PROJECT_NUMBER")
+    )
+    assert Hestia.__version__ == "0.2.0"
+    assert metadata["project"]["version"] == Hestia.__version__
+    assert doxy_version == Hestia.__version__
 
 
 def test_models_does_not_import_hardware():

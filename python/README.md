@@ -1,8 +1,8 @@
 # Hestia for Python
 
 Hestia provides system discovery and AI model intelligence. The Python package
-currently exposes accelerator and model-size types, a model catalog, and model
-information lookup.
+exposes hardware profiles and detection, plus a model catalog and advisory
+recommendations.
 
 The distribution is named `hestia-system`; import it as `Hestia`.
 
@@ -23,9 +23,14 @@ python -m pip install "hestia-system[dev]"     # pytest
 
 ```python
 from Hestia import AcceleratorType, ModelSize, get_model_info
+import Hestia
 
 info = get_model_info(AcceleratorType.NVIDIA_CUDA, ModelSize.SMALL)
 print(info)
+
+profile = Hestia.detect_hardware()
+recommendation = Hestia.recommend_model(profile)
+Hestia.print_hardware_report(profile, recommendation)
 ```
 
 The package supports Python versions declared by the project metadata (Python

@@ -46,15 +46,26 @@ outcomes.
 - `Hestia.model_catalog` remains importable and exposes the same names as
   `Hestia.models.catalog`.
 - Enum values (for example `"nvidia_cuda"`, `"tiny"`) are part of the public
-  contract and do not change within a `0.1.x` release.
+  contract and do not change within a `0.2.x` release.
 
 ### Hardware and software detection (target behavior)
 
-These apply once the subpackages are ported (see `migration.md`):
+These apply to the implemented hardware package:
 
-- Detection failures degrade to documented defaults instead of raising.
-- Optional tools and libraries (NVML, `rocm-smi`, and so on) being absent is
-  not an error.
+- Each CPU, memory, platform, and GPU probe is best-effort; unavailable data
+  degrades to documented defaults and does not invalidate unrelated fields.
+- Optional tools and libraries (NVML, `rocm-smi`, PowerShell and
+  `system_profiler`) being absent is not an error.
+- GPU discovery never runs through a shell, and each subprocess probe has a
+  timeout.
+- `available_for_models_gb` uses 70% of available RAM as headroom and caps it
+  at 80% of reported free memory on the selected accelerator when available.
+  It is an estimate, not a runtime guarantee.
+- A recommendation is advisory catalog data. It does not confirm that a
+  runtime supports or has installed a listed model.
+
+Software behavior applies when the software package is implemented:
+
 - Only configured software tools are probed, each with a timeout; Hestia never
   runs arbitrary programs found on `PATH`.
 - An unverifiable tool version is reported as unknown, never guessed.
@@ -68,6 +79,8 @@ names in the catalog between releases.
 ## Testing This Contract
 
 `python/tests/test_models.py` covers the catalog guarantees and the import
-boundary. `python/tests/test_examples.py` runs every example. Detection tests
-must use mocks and synthetic data; CI must not depend on any specific hardware.
+boundary. `python/tests/test_hardware.py` and
+`python/tests/test_recommender.py` cover detection and recommendation using
+mocks and synthetic data. `python/tests/test_examples.py` runs every example.
+CI must not depend on any specific hardware.
 Run them with `python/scripts/run_tests.bat` or `.sh`.

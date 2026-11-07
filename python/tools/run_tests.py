@@ -6,7 +6,7 @@ from pathlib import Path
 
 TOOLS_DIR = Path(__file__).resolve().parent
 OUTPUT_FILE = TOOLS_DIR.parent / "tests" / "test_output.txt"
-SUITES = ["models"]
+SUITES = ["models", "hardware"]
 
 
 def main() -> int:

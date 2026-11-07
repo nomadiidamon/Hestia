@@ -12,3 +12,8 @@ Each example should be small and focused on demonstrating one concept from
 [`../docs/Concepts.md`](../docs/Concepts.md). Keep the C++ and Python examples
 conceptually parallel (same scenario, both languages) wherever practical, so
 it's easy to see that the two implementations behave the same way.
+
+Python hardware examples demonstrate profile detection, serialization and
+reporting; recommendation examples show how to pair a profile with the model
+catalog. Hardware probes are best-effort, so examples also run on CPU-only
+systems without optional GPU interfaces.
