@@ -4,8 +4,8 @@
 
 Build, dev, and contributor notes specific to the C++ side of this project.
 For cross-language concepts and behavior guarantees, see
-[`../Concepts.md`](../Concepts.md) and [`../Semantics.md`](../Semantics.md).
-For why the repo is laid out this way, see [`../Architecture.md`](../Architecture.md).
+[Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html) and [Semantics](https://nomadiidamon.github.io/Hestia/Semantics.html).
+For why the repo is laid out this way, see [Architecture](https://nomadiidamon.github.io/Hestia/Architecture.html).
 
 ## Layout
 
