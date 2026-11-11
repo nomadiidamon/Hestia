@@ -13,8 +13,10 @@ Distribution name: `hestia-system`. Import name: `Hestia`.
 
 Implemented: `Hestia.types`, the `Hestia.models` catalog and metadata API,
 `Hestia.hardware` detection/profile APIs, and top-level model recommendations.
-The legacy `Hestia.model_catalog` path remains available. Planned: software
-inventory and the `hestia` CLI.
+The `Hestia.software.dependency`, `Hestia.software.installer`, and
+`Hestia.software.doctor` frameworks are implemented. The legacy
+`Hestia.model_catalog` path remains available. Planned: software inventory and
+the `hestia` CLI.
 
 ## Layout
 
@@ -27,6 +29,7 @@ python/
 |   +-- model_catalog.py   # Legacy path
 |   +-- models/
 |   +-- hardware/
+|   +-- software/          # Dependency, installer, and doctor frameworks
 |   `-- recommender.py
 +-- tests/             # pytest suite
 +-- scripts/           # clean / run_tests wrappers (.bat and .sh)
@@ -38,7 +41,7 @@ python/
 
 - Python version satisfying `project.ini`'s `[compatibility] python_requires`
   (currently 3.10 or later).
-- Runtime dependency: `psutil`.
+- Runtime dependencies: `psutil`, `packaging`.
 - Optional extras: `nvidia` (`nvidia-ml-py`), `dev` (`pytest`).
 
 ## Setting Up a Dev Environment
@@ -62,7 +65,26 @@ info = Hestia.get_model_info(AcceleratorType.NVIDIA_CUDA, ModelSize.SMALL)
 print(info.get("tools"))
 ```
 
-Runnable examples are in `examples/python/models/`.
+Dependency checks can be composed and reported without performing repairs:
+
+```python
+from Hestia.software.dependency import DependencyRegistry, SystemCommandDependency
+from Hestia.software.doctor import Doctor
+
+registry = DependencyRegistry()
+registry.register(SystemCommandDependency("git"))
+report = Doctor(registry).run()
+print(report.to_dict())
+```
+
+The installer accepts only caller-defined install requests and injected
+backends. Execution requires caller-supplied authorization scoped to the
+approved dependency group/actions. Hestia does not prompt for approval, select
+packages, or choose a package manager; doctor repair delegates through the
+same installer path.
+
+Runnable model and software examples are in `examples/python/models/` and
+`examples/python/software/`.
 
 ## Running Tests
 
@@ -86,6 +108,7 @@ delegates to each `tools/<subpackage>/run_tests.py` and collects output in
 | `tools/clean.py` | Uninstalls the package, runs each sub-package's `clean.py`, then removes `build`, `dist`, caches, `egg-info` and `__pycache__`. Supports `--dry-run` and `-y`. |
 | `tools/models/run_tests.py` | Runs the models tests and the examples test. |
 | `tools/hardware/run_tests.py` | Runs hardware detection and recommendation tests. |
+| `tools/software/run_tests.py` | Runs dependency, installer, and doctor tests. |
 | `tools/models/clean.py` | Cleans models-related artifacts. |
 | `tools/hardware/clean.py` | Cleans hardware-related artifacts. |
 

@@ -17,3 +17,8 @@ Python hardware examples demonstrate profile detection, serialization and
 reporting; recommendation examples show how to pair a profile with the model
 catalog. Hardware probes are best-effort, so examples also run on CPU-only
 systems without optional GPU interfaces.
+
+The software examples cover typed read-only dependency checks,
+caller-authorized installer workflows, and doctor diagnostics with delegated
+repair. Installation backends are in-memory demonstrations and do not modify
+the host system.

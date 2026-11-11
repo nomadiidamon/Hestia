@@ -33,6 +33,22 @@ recommendation = Hestia.recommend_model(profile)
 Hestia.print_hardware_report(profile, recommendation)
 ```
 
+Software dependencies can be checked and summarized independently:
+
+```python
+from Hestia.software.dependency import DependencyRegistry, SystemCommandDependency
+from Hestia.software.doctor import Doctor
+
+registry = DependencyRegistry()
+registry.register(SystemCommandDependency("git"))
+report = Doctor(registry).run()
+print(report.to_dict())
+```
+
+Installation is performed only through caller-supplied requests and backends,
+with authorization scoped to the approved dependency group and actions. Hestia
+does not prompt for approval or infer what to install.
+
 The package supports Python versions declared by the project metadata (Python
 3.10 and later).
 

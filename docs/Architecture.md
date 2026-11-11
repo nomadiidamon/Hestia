@@ -112,7 +112,10 @@ python/src/Hestia/
 |   +-- profile.py
 |   `-- detector.py
 |-- recommender.py     # Cross-area hardware + model recommendation
-`-- software/          # Planned
+`-- software/          # Dependency checks, installer framework, doctor reports
+  |-- dependency/    # Typed requirements and read-only checks
+  |-- installer/     # Caller-authorized backend execution and rechecks
+  `-- doctor/        # Health and diagnostic aggregation
 ```
 
 Dependency rules:
@@ -121,6 +124,10 @@ Dependency rules:
 - `models/`, `hardware/` and `software/` may import `types.py`, but never each
   other's implementation modules. In particular `models/` must not import
   `hardware/` (a test enforces this).
+- `software/doctor/` and `software/installer/` depend on `software/dependency/`.
+  Dependency checks are read-only. Installation uses caller-supplied inputs,
+  authorization scope, and backends; doctor delegates requested repairs to the
+  installer rather than mutating the environment itself.
 - Nothing in Hestia may import Domus-AI or its subsystems.
 - Recommendations that combine hardware and models are layered on top of
   these packages, not inside `models/`.

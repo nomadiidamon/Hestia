@@ -8,6 +8,7 @@ dynamic = ["version", "description", "readme", "license", "authors", "requires-p
 
 dependencies = [
     "psutil>=5.9.0",
+    "packaging>=23.0",
 ]
 
 [project.optional-dependencies]
@@ -27,3 +28,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.pyright]
+extraPaths = ["src"]
