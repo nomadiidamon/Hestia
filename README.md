@@ -1,7 +1,5 @@
 # Hestia
 
-@page repository_readme Repository README
-
 System discovery, hardware analysis, reusable software dependency checks, and AI model recommendations. Python is the active implementation; the C++ tree is not yet implemented.
 
 > Hestia was developed by abstracting hardware and AI model recommendations from [Domus-AI](https://github.com/nomadiidamon/Domus-AI) and has been expounded on for a fully reusable tool.
