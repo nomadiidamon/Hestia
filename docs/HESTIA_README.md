@@ -1,13 +1,10 @@
-@mainpage Hestia
-
 # Hestia
 
 System discovery, hardware analysis, reusable software dependency checks, and
 AI model recommendations. Python is the active implementation; C++ is not yet
 implemented.
 
-Hestia was developed by abstracting hardware and AI model recommendations from
-[Domus-AI](https://nomadiidamon.github.io/Domus-AI/) into a reusable tool.
+> Hestia was developed by abstracting hardware and AI model recommendations from [Domus-AI](https://nomadiidamon.github.io/Domus-AI/) into a reusable tool.
 
 ## Quick Start
 
