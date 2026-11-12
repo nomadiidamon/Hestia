@@ -34,6 +34,12 @@ class DoctorReport:
 	diagnostics: tuple[Diagnostic, ...]
 
 	@property
+	def failed_dependencies(self) -> list[str]:
+		return [
+			name for name, result in self.dependencies.items() if not result.is_satisfied
+		]
+
+	@property
 	def healthy(self) -> bool:
 		return not any(result.is_blocking for result in self.dependencies.values()) and not any(
 			diagnostic.severity is DiagnosticSeverity.ERROR for diagnostic in self.diagnostics
@@ -42,6 +48,7 @@ class DoctorReport:
 	def to_dict(self) -> dict[str, object]:
 		return {
 			"healthy": self.healthy,
+			"failed_dependencies": self.failed_dependencies,
 			"dependencies": {
 				name: result.to_dict() for name, result in self.dependencies.items()
 			},

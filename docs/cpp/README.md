@@ -2,8 +2,12 @@
 
 # C++ Implementation
 
+Hestia provides system discovery, hardware analysis, reusable software
+dependency checks, and AI model recommendations. This C++ tree is a placeholder
+and does not implement these capabilities yet.
+
 Build, dev, and contributor notes specific to the C++ side of this project.
-For cross-language concepts and behavior guarantees, see
+For project concepts and intended behavior guarantees, see
 [Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html) and [Semantics](https://nomadiidamon.github.io/Hestia/Semantics.html).
 For why the repo is laid out this way, see [Architecture](https://nomadiidamon.github.io/Hestia/Architecture.html).
 
@@ -59,5 +63,5 @@ CI reproduction, etc.). Document each script here as it's added:
 ## Versioning / Metadata
 
 This tree should read project name/version/contributors from the shared
-[`../../project.ini`](../../project.ini) rather than hardcoding them - see
+`project.ini` rather than hardcoding them - see
 "Shared Metadata" in `../Architecture.md` for the intended mechanism.

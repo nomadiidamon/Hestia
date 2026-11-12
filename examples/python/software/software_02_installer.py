@@ -71,9 +71,15 @@ def main() -> None:
         group_id="example-runtime",
         action_ids={"install-example-engine"},
     )
+    unsupported_report = Installer(registry, {}).execute(plan, authorization)
+    print("Unsupported installation report:")
+    print(unsupported_report.to_dict())
+    print(f"Failed dependencies: {list(unsupported_report.failed_dependencies)}")
+
     report = installer.execute(plan, authorization, progress=show_progress)
     print("Installation report:")
     print(report.to_dict())
+    print(f"Failed dependencies: {list(report.failed_dependencies)}")
     print(f"Post-install check succeeded: {report.succeeded}")
 
 

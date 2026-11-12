@@ -2,8 +2,12 @@
 
 # Python Implementation
 
+Hestia provides system discovery, hardware analysis, reusable software
+dependency checks, and AI model recommendations. This page documents the
+active Python implementation.
+
 Build, dev, and contributor notes specific to the Python side of this
-project. For cross-language concepts and behavior guarantees, see
+project. For concepts and behavior guarantees, see
 [Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html) and [Semantics](https://nomadiidamon.github.io/Hestia/Semantics.html).
 For why the repo is laid out this way, see [Architecture](https://nomadiidamon.github.io/Hestia/Architecture.html).
 
@@ -14,9 +18,24 @@ Distribution name: `hestia-system`. Import name: `Hestia`.
 Implemented: `Hestia.types`, the `Hestia.models` catalog and metadata API,
 `Hestia.hardware` detection/profile APIs, and top-level model recommendations.
 The `Hestia.software.dependency`, `Hestia.software.installer`, and
-`Hestia.software.doctor` frameworks are implemented. The legacy
-`Hestia.model_catalog` path remains available. Planned: software inventory and
-the `hestia` CLI.
+`Hestia.software.doctor` frameworks are implemented. General software
+inventory, a `hestia` CLI, and software-informed model recommendations are not
+implemented. Whole-system software analysis is planned for the next
+implementation phase, which will add a software catalog. The legacy
+`Hestia.model_catalog` path remains available.
+
+The software frameworks check only caller-registered requirements. Built-in
+checks cover Python distributions, commands, files, directories, and
+environment variables; service, system-library, driver, and custom checks use
+caller-provided probes. Checks and doctor reports are read-only. Installation
+requires caller-defined requests, injected backends, and authorization scoped
+to the plan's group and actions. Hestia does not choose packages or package
+managers, escalate privileges, or automatically repair the environment. The
+authorization scope is not a security credential or sandbox.
+Doctor reports list every unsatisfied dependency in `failed_dependencies`;
+installer reports include failed actions and unsatisfied rechecks in the same
+field. The serialized `to_dict()` output uses a list, suitable for displaying
+to end users or using to select possible repairs.
 
 ## Layout
 
@@ -77,11 +96,21 @@ report = Doctor(registry).run()
 print(report.to_dict())
 ```
 
+The registry does not yet scan the machine for all installed software. A
+catalog-based inventory is planned for the next implementation phase.
+Applications currently choose the requirements to register. Command version
+queries run only when the caller configures the arguments, and use a timeout;
+the parser is optional.
+
 The installer accepts only caller-defined install requests and injected
 backends. Execution requires caller-supplied authorization scoped to the
 approved dependency group/actions. Hestia does not prompt for approval, select
-packages, or choose a package manager; doctor repair delegates through the
-same installer path.
+packages, choose a package manager, or provide a default backend; authorization
+is an application-level scope check, not a security boundary. Doctor reports
+health and caller-provided diagnostics without repairs; its `repair()` method
+delegates an already-built plan to the same installer path. An injected backend
+or service probe must enforce the timeout passed to it; Hestia does not
+interrupt it automatically.
 
 Runnable model and software examples are in `examples/python/models/` and
 `examples/python/software/`.
@@ -119,6 +148,6 @@ automatically by `clean.py`) and add the name to `SUITES` in
 ## Versioning / Metadata
 
 Name, version, description, license, authors, homepage and `requires-python`
-come from [`../../project.ini`](../../project.ini) through `setup.py`; do not
+come from `project.ini` through `setup.py`; do not
 hardcode them in `pyproject.toml`. The pre-commit hook checks the version
 against the Doxyfile `PROJECT_NUMBER`.

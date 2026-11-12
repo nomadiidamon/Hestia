@@ -1,8 +1,11 @@
+@page python_package_readme Hestia for Python
+
 # Hestia for Python
 
-Hestia provides system discovery and AI model intelligence. The Python package
-exposes hardware profiles and detection, plus a model catalog and advisory
-recommendations.
+Hestia provides system discovery, hardware analysis, reusable software
+dependency checks, and AI model recommendations. Its Python package provides
+hardware profiles and reusable dependency, doctor, and installer frameworks.
+These software frameworks are Python-only; C++ is not implemented.
 
 The distribution is named `hestia-system`; import it as `Hestia`.
 
@@ -33,6 +36,14 @@ recommendation = Hestia.recommend_model(profile)
 Hestia.print_hardware_report(profile, recommendation)
 ```
 
+Currently only caller-registered dependencies are checked; whole-system
+software analysis is planned for the next implementation phase, which will add
+a software catalog. Built-in checks cover Python packages,
+commands, files, directories, and environment variables. Callers can supply
+probes for services, system libraries, drivers, and custom requirements.
+Checks and doctor reports are read-only. A command version query runs only
+when configured by the caller and is bounded by a timeout.
+
 Software dependencies can be checked and summarized independently:
 
 ```python
@@ -43,11 +54,22 @@ registry = DependencyRegistry()
 registry.register(SystemCommandDependency("git"))
 report = Doctor(registry).run()
 print(report.to_dict())
+print(report.failed_dependencies)
 ```
 
-Installation is performed only through caller-supplied requests and backends,
-with authorization scoped to the approved dependency group and actions. Hestia
-does not prompt for approval or infer what to install.
+`failed_dependencies` is an ordered list callers can display to end users or
+use to choose which caller-defined repairs to offer.
+
+Installation is performed only through caller-supplied requests and injected
+backends, with authorization scoped to the approved dependency group and
+actions. The installer skips already-satisfied dependencies, reports
+unsupported backends and failures, and rechecks affected dependencies.
+Authorization is an application-level scope check, not a security credential
+or sandbox. Hestia does not prompt for approval, infer what to install, choose
+packages or package managers, escalate privileges, or perform repairs during
+checks or doctor reports. The doctor aggregates dependency results and
+caller-defined diagnostics; repairs must be explicitly delegated to the
+installer.
 
 The package supports Python versions declared by the project metadata (Python
 3.10 and later).

@@ -188,9 +188,10 @@ def test_dependency_types_cover_each_kind(tmp_path):
 
 
 class FakeBackend:
-	def __init__(self, *, succeeds=True, on_success=None):
+	def __init__(self, *, succeeds=True, on_success=None, outcome_succeeds=True):
 		self.succeeds = succeeds
 		self.on_success = on_success
+		self.outcome_succeeds = outcome_succeeds
 		self.calls = []
 
 	def install(self, request, *, timeout_seconds, report_progress):
@@ -200,7 +201,11 @@ class FakeBackend:
 			raise TimeoutError
 		if self.on_success is not None:
 			self.on_success()
-		return InstallOutcome(True, "Installed", {"target": request.target})
+		return InstallOutcome(
+			self.outcome_succeeds,
+			"Installed" if self.outcome_succeeds else "Installation rejected",
+			{"target": request.target},
+		)
 
 
 def make_install_setup(backend=None):
@@ -238,6 +243,7 @@ def test_installer_requires_scoped_authorization_and_rechecks_with_progress():
 	)
 	assert report.actions[0].status is InstallActionStatus.SUCCEEDED
 	assert report.rechecks["engine"].is_satisfied
+	assert report.failed_dependencies == []
 	assert [event.message for event in events] == ["Installation started", "Fetching", "Installation finished"]
 	assert backend.calls[0][1] == 300
 
@@ -252,6 +258,19 @@ def test_install_report_is_not_successful_when_recheck_fails():
 	assert report.actions[0].status is InstallActionStatus.SUCCEEDED
 	assert report.rechecks["engine"].status is DependencyStatus.MISSING
 	assert not report.succeeded
+	assert report.failed_dependencies == ["engine"]
+	assert report.to_dict()["failed_dependencies"] == ["engine"]
+
+
+def test_install_report_lists_failed_action_when_recheck_succeeds():
+	backend = FakeBackend(outcome_succeeds=False)
+	registry, installer, plan, _ = make_install_setup(backend)
+	report = installer.execute(
+		plan, InstallAuthorization("runtime", frozenset({"install-engine"}))
+	)
+	assert report.actions[0].status is InstallActionStatus.FAILED
+	assert report.rechecks["engine"].is_satisfied
+	assert report.failed_dependencies == ["engine"]
 
 
 def test_installer_skips_satisfied_and_reports_unsupported_or_timeout():
@@ -262,12 +281,15 @@ def test_installer_skips_satisfied_and_reports_unsupported_or_timeout():
 	)
 	assert unsupported.actions[0].status is InstallActionStatus.UNSUPPORTED
 	assert unsupported.rechecks["engine"].status is DependencyStatus.MISSING
+	assert unsupported.failed_dependencies == ["engine"]
 
 	backend = FakeBackend(succeeds=False)
 	registry, installer, plan, state = make_install_setup(backend)
-	assert installer.execute(
+	timed_out = installer.execute(
 		plan, InstallAuthorization("runtime", frozenset({"install-engine"}))
-	).actions[0].status is InstallActionStatus.TIMED_OUT
+	)
+	assert timed_out.actions[0].status is InstallActionStatus.TIMED_OUT
+	assert timed_out.failed_dependencies == ["engine"]
 
 	request = InstallRequest("again", "runtime", "engine", "test", "engine-package")
 	state["ready"] = True
@@ -293,6 +315,8 @@ def test_doctor_aggregates_diagnostics_and_delegates_repair():
 	])
 	assert not report.healthy
 	assert report.dependencies["engine"].status is DependencyStatus.MISSING
+	assert report.failed_dependencies == ["engine"]
+	assert report.to_dict()["failed_dependencies"] == ["engine"]
 	assert report.to_dict()["diagnostics"][0]["code"] == "engine_missing"
 
 	installation = doctor.repair(
@@ -301,3 +325,35 @@ def test_doctor_aggregates_diagnostics_and_delegates_repair():
 		InstallAuthorization("runtime", frozenset({"install-engine"})),
 	)
 	assert installation.actions[0].status is InstallActionStatus.SUCCEEDED
+	assert installation.failed_dependencies == []
+
+
+def test_doctor_lists_optional_failures_without_marking_report_unhealthy():
+	registry = DependencyRegistry()
+	registry.register_many([
+		CustomDependency("first", lambda: CheckResult(DependencyStatus.MISSING, "Missing"), required=False),
+		CustomDependency("second", lambda: CheckResult(DependencyStatus.UNKNOWN, "Unknown"), required=False),
+	])
+	report = Doctor(registry).run()
+	assert report.healthy
+	assert report.failed_dependencies == ["first", "second"]
+	assert report.to_dict()["failed_dependencies"] == ["first", "second"]
+
+
+def test_installer_lists_failed_dependencies_once_in_action_order():
+	registry = DependencyRegistry()
+	registry.register_many([
+		CustomDependency("first", lambda: CheckResult(DependencyStatus.MISSING, "Missing")),
+		CustomDependency("second", lambda: CheckResult(DependencyStatus.MISSING, "Missing")),
+	])
+	installer = Installer(registry, {})
+	requests = [
+		InstallRequest("one", "group", "second", "missing", "target"),
+		InstallRequest("two", "group", "first", "missing", "target"),
+		InstallRequest("three", "group", "second", "missing", "target"),
+	]
+	plan = installer.plan(requests, registry.check_all())
+	report = installer.execute(plan, InstallAuthorization("group", frozenset({"one", "two", "three"})))
+	assert not report.succeeded
+	assert report.failed_dependencies == ["second", "first"]
+	assert report.to_dict()["failed_dependencies"] == ["second", "first"]

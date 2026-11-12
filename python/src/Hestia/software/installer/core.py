@@ -93,6 +93,18 @@ class InstallReport:
 	progress_errors: tuple[str, ...] = ()
 
 	@property
+	def failed_dependencies(self) -> list[str]:
+		failed_actions = (
+			action.dependency_name
+			for action in self.actions
+			if action.status is not InstallActionStatus.SUCCEEDED
+		)
+		failed_rechecks = (
+			name for name, result in self.rechecks.items() if not result.is_satisfied
+		)
+		return list(dict.fromkeys((*failed_actions, *failed_rechecks)))
+
+	@property
 	def succeeded(self) -> bool:
 		return (
 			all(action.status is InstallActionStatus.SUCCEEDED for action in self.actions)
@@ -103,6 +115,7 @@ class InstallReport:
 		return {
 			"group_id": self.group_id,
 			"succeeded": self.succeeded,
+			"failed_dependencies": self.failed_dependencies,
 			"actions": [
 				{
 					"action_id": action.action_id,

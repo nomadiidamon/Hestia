@@ -4,28 +4,26 @@
 
 ## Introduction
 
-Thank you for your interest in contributing! This document outlines the guidelines and best practices for contributing to this project, which provides parallel C++ and Python implementations.
+Thank you for your interest in contributing! This document outlines the guidelines and best practices for contributing to Hestia: system discovery, hardware analysis, reusable software dependency checks, and AI model recommendations. Python is active; C++ is not yet implemented.
 
 ### Code of Conduct
 
-All contributors are expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+All contributors are expected to follow our [Code of Conduct](https://nomadiidamon.github.io/Hestia/codeofconduct.html).
 
 ## Repository Model
 
 This repository separates **implementation** from **shared semantics and concepts**:
 
-- **Shared concepts and semantics** live in [`docs/Concepts.md`](docs/Concepts.md) and [`docs/Semantics.md`](docs/Semantics.md). They define what the project is and the behavior every implementation must uphold.
-- **Implementations** live in independent trees, each with its own idiomatic tooling:
-  - [`cpp/`](cpp/) - built with premake5. See [`docs/cpp/README.md`](docs/cpp/README.md).
-  - [`python/`](python/) - packaged with `pyproject.toml`. See [`docs/python/README.md`](docs/python/README.md).
-- **Shared metadata** (version, contributors, etc.) lives once in [`project.ini`](project.ini).
-- **Examples** mirror the language split under [`examples/`](examples/).
+- **Shared concepts and semantics** are in [Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html) and [Semantics](https://nomadiidamon.github.io/Hestia/Semantics.html). They describe the active Python behavior and intended future contract.
+- **Implementations** live in `cpp/` and `python/`, each with its own tooling. C++ is currently a placeholder; see the [C++ guide](https://nomadiidamon.github.io/Hestia/cpp_implementation.html) and [Python guide](https://nomadiidamon.github.io/Hestia/python_implementation.html).
+- **Shared metadata** (version, contributors, etc.) lives in `project.ini`.
+- **Examples** live under `examples/`.
 
-See [`docs/Architecture.md`](docs/Architecture.md) for the full layout.
+See [Architecture](https://nomadiidamon.github.io/Hestia/Architecture.html) for the full layout.
 
 ### Ground Rules
 
-- A change to behavior starts in `docs/Semantics.md` (or `docs/Concepts.md`), then is applied to every implementation. If you only touch one language, say so in your PR and open a follow-up issue for the other.
+- A behavior change starts in [Semantics](https://nomadiidamon.github.io/Hestia/Semantics.html) or [Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html). Update the active Python implementation; describe any intended C++ follow-up when relevant.
 - Do not introduce cross-language build dependencies. Each language keeps its native tooling.
 - Do not duplicate project-wide metadata; update `project.ini`.
 - Keep docs and examples in the matching language subtree.
@@ -103,7 +101,7 @@ Follow [PEP 8](https://peps.python.org/pep-0008/):
 
 ### Cross-Language Parity
 
-Equivalent public concepts should be recognizably the same across implementations (e.g. C++ `DoThing()` corresponds to Python `do_thing()`). Each language uses its own conventions rather than copying the other's.
+When C++ is implemented, equivalent public concepts should be recognizably the same across implementations (e.g. C++ `DoThing()` corresponds to Python `do_thing()`). Each language should use its own conventions rather than copying the other's.
 
 ## Coding Standards
 
@@ -112,5 +110,5 @@ Equivalent public concepts should be recognizably the same across implementation
 - Comment only where the code cannot explain itself, such as complex logic or non-obvious constraints.
 - Keep code modular and reusable; avoid duplication.
 - Write unit tests for new features and bug fixes in each affected implementation.
-- Ensure behavior matches [`docs/Semantics.md`](docs/Semantics.md).
+- Ensure behavior matches [Semantics](https://nomadiidamon.github.io/Hestia/Semantics.html).
 - Update docs and examples when public behavior changes.

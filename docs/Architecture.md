@@ -4,24 +4,25 @@
 This document describes how this repository is organized and why, so that
 anyone adding code, docs, or CI can find - and keep finding - the right place for it.
 
-Hestia is a system discovery and AI model intelligence library covering three
-information areas: hardware, software/CLI tools, and AI models (see
-[`Concepts.md`](Concepts.md)). It is extracted from Domus-AI and must never
-depend on it. The Python implementation is the active
-one; the C++ tree is currently a placeholder.
+Hestia provides system discovery, hardware analysis, reusable software
+dependency checks, and AI model recommendations (see
+[Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html)). Hestia is
+extracted from [Domus-AI](https://nomadiidamon.github.io/Domus-AI) but does not depend on it. The Python implementation
+is active; C++ is currently a placeholder. Whole-system software analysis is
+not implemented yet; a catalog-based inventory is planned for the next
+implementation phase.
 
 ## Goals
 
-- **One repo, two implementations.** C++ and Python implementations of the
-  same project live side by side, with parity in behavior (see
-  [`Semantics.md`](Semantics.md)) but idiomatic, independent tooling per
-  language.
+- **One repo, two planned implementations.** Python is active; C++ remains a
+  placeholder. Shared semantics describe the intended contract, but software
+  dependency tooling currently exists only in Python.
 - **No shared build system.** Each language keeps its native tooling
   (premake5 for C++, `pyproject.toml` for Python) rather than forcing both
   through one build graph.
 - **One shared source of truth for metadata.** Version, contributors, and
-  similar project-wide facts live once, in [`project.ini`](../project.ini),
-  and both languages read from it instead of maintaining their own copies.
+  similar project-wide facts live once, in `project.ini`,
+  and implementations should read from it instead of maintaining their own copies.
 - **Docs and examples mirror the language split**, so a contributor working
   in one language only ever needs to look in that language's subtree plus
   the shared top-level docs.
@@ -51,8 +52,8 @@ one; the C++ tree is currently a placeholder.
 |
 +-- docs/
 |   +-- Architecture.md     # This file
-|   +-- Concepts.md         # Core concepts shared by both implementations
-|   +-- Semantics.md        # Behavioral guarantees both implementations must uphold
+|   +-- Concepts.md         # Core concepts for the active implementation
+|   +-- Semantics.md        # Python guarantees and intended future contract
 |   +-- cpp/README.md       # C++-specific build/dev/contributor notes
 |   +-- python/README.md    # Python-specific build/dev/contributor notes
 |
@@ -86,7 +87,9 @@ convention only needs to be learned once:
 - **`tool/`** - standalone CLI tool(s) built from this language's `src/`,
   kept separate so "library" and "thing you run" aren't tangled together.
 
-See `docs/cpp/README.md` and `docs/python/README.md` for the language-specific details of what currently lives in each.
+See the [C++ implementation guide](https://nomadiidamon.github.io/Hestia/cpp_implementation.html)
+and [Python implementation guide](https://nomadiidamon.github.io/Hestia/python_implementation.html)
+for language-specific details.
 
 In the Python tree, `tools/` (plural) holds the dev tools. `tools/clean.py` and
 `tools/run_tests.py` discover and delegate to a `clean.py` / `run_tests.py` in
@@ -112,7 +115,7 @@ python/src/Hestia/
 |   +-- profile.py
 |   `-- detector.py
 |-- recommender.py     # Cross-area hardware + model recommendation
-`-- software/          # Dependency checks, installer framework, doctor reports
+`-- software/          # Python dependency checks, installer, doctor reports
   |-- dependency/    # Typed requirements and read-only checks
   |-- installer/     # Caller-authorized backend execution and rechecks
   `-- doctor/        # Health and diagnostic aggregation
@@ -128,6 +131,13 @@ Dependency rules:
   Dependency checks are read-only. Installation uses caller-supplied inputs,
   authorization scope, and backends; doctor delegates requested repairs to the
   installer rather than mutating the environment itself.
+- These packages do not yet provide whole-system software analysis; a
+  catalog-based inventory is planned for the next implementation phase. There
+  is no default package-manager backend. Applications define what to check and
+  provide installation actions/backends; checks and doctor reports never
+  install or repair software implicitly.
+- Doctor and installer reports expose `failed_dependencies` as an ordered list
+  of names, as well as detailed per-dependency/action results.
 - Nothing in Hestia may import Domus-AI or its subsystems.
 - Recommendations that combine hardware and models are layered on top of
   these packages, not inside `models/`.
@@ -137,7 +147,7 @@ The top-level `Hestia/__init__.py` is the public facade; subpackage
 
 ## Examples
 
-`examples/` sits at the repo root (not nested inside `cpp/` or `python/`) so that it's immediately visible as a top-level concern, and so example code can be found and compared side-by-side across languages without digging into either implementation's tree. Each subdirectory (`examples/cpp/`, `examples/python/`) contains runnable examples for that language, built against that language's published/local package.
+`examples/` sits at the repo root (not nested inside `cpp/` or `python/`) so it is immediately visible as a top-level concern. Python examples are runnable and test-covered; `examples/cpp/` remains a placeholder until the C++ implementation exists.
 
 Python examples live in per-topic folders (`examples/python/models/` holds one
 file per topic, named `models_<number>_<topic>.py`). Each carries a Doxygen
@@ -151,8 +161,8 @@ project - not just one language - are recorded: project name, version,
 license, maintainers/contributors, and cross-language compatibility notes
 (e.g. minimum C++ standard, minimum Python version).
 
-Both language trees are expected to **read** this file at build/packaging
-time rather than hold their own separate copy of these values:
+Python packaging currently reads this file. C++ tooling should read it when
+that implementation is added rather than holding a separate copy:
 
 - On the C++ side, `premake5.lua` (or a small helper invoked from it) should parse `project.ini` to populate things like the version string.
 - On the Python side, `python/setup.py` parses `project.ini` with `configparser`
@@ -164,12 +174,11 @@ time rather than hold their own separate copy of these values:
 - The pre-commit hook `03-match-version` checks that the `project.ini` version
   equals the Doxyfile `PROJECT_NUMBER`.
 
-The exact mechanism is left to each language's build scripts; the contract is just: **`project.ini` is authoritative, and both sides derive from it rather than duplicating values by hand.** The Python build reads `../project.ini`, so it only builds from a full repository checkout.
+The exact mechanism is left to each language's build scripts; the contract is: **`project.ini` is authoritative, and implementations should derive project-wide values from it rather than duplicating them by hand.** The Python build reads `../project.ini`, so it only builds from a full repository checkout.
 
 ## Documentation Layout
 
-Shared documentation - things true of the project as a whole, independent of language - lives directly in `docs/`: this architecture doc, `Concepts.md`, and `Semantics.md`. Anything specific to building, testing, or contributing to one language's implementation lives in that language's own
-`docs/<language>/README.md`, keeping the top-level docs free of implementation details that would otherwise need to be duplicated or kept in sync across two READMEs.
+Shared documentation - things true of the project as a whole, independent of language - lives directly in `docs/`: this architecture doc, `Concepts.md`, and `Semantics.md`. Anything specific to building, testing, or contributing to one language's implementation lives in that language's own documentation page, keeping the top-level docs free of implementation details that would otherwise need to be duplicated or kept in sync across two READMEs.
 
 ## CI Layout
 
@@ -192,6 +201,6 @@ A quick reference for "where does this go":
 | A sub-package clean/test tool | `python/tools/<subpackage>/` |
 | A new CLI tool | `<language>/tools/` |
 | A runnable usage example | `examples/<language>/` |
-| A concept/behavior shared by both languages | `docs/Concepts.md` or `docs/Semantics.md` |
+| A concept/behavior for the active implementation and future C++ work | `docs/Concepts.md` or `docs/Semantics.md` |
 | A language-specific build/dev note | `docs/<language>/README.md` |
 | A project-wide fact (version, contributor, etc.) | `project.ini` |

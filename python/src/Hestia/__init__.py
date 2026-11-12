@@ -6,7 +6,7 @@ from .models import ModelInfo, get_model_info
 from .types import AcceleratorType, ModelSize
 
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 __all__ = [

@@ -1,24 +1,28 @@
 # Examples
 
-Runnable, minimal usage examples for both implementations, kept at the repo
-root (rather than nested inside `cpp/` or `python/`) so they're easy to find
-and compare side-by-side. See [`../docs/Architecture.md`](../docs/Architecture.md)
-for the reasoning.
+@page examples Examples
 
-- [`cpp/`](cpp/) — examples using the C++ implementation (built against `../cpp/src`).
-- [`python/`](python/) — examples using the Python implementation (built against `../python/src`).
+Minimal usage examples kept at the repo root (rather than nested inside `cpp/`
+or `python/`). Python examples are runnable and covered by the test suite; the
+C++ implementation is not yet implemented. See
+[Architecture](https://nomadiidamon.github.io/Hestia/Architecture.html) for the repository layout.
 
-Each example should be small and focused on demonstrating one concept from
-[`../docs/Concepts.md`](../docs/Concepts.md). Keep the C++ and Python examples
-conceptually parallel (same scenario, both languages) wherever practical, so
-it's easy to see that the two implementations behave the same way.
+- `examples/cpp/` — examples for the C++ implementation placeholder.
+- `examples/python/` — runnable examples using the Python implementation and `python/src/`.
+
+Each example should be small and focused on one concept from
+[Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html). Keep examples aligned across
+languages when a C++ implementation exists.
 
 Python hardware examples demonstrate profile detection, serialization and
 reporting; recommendation examples show how to pair a profile with the model
 catalog. Hardware probes are best-effort, so examples also run on CPU-only
 systems without optional GPU interfaces.
 
-The software examples cover typed read-only dependency checks,
+The software examples cover configured read-only dependency checks,
 caller-authorized installer workflows, and doctor diagnostics with delegated
 repair. Installation backends are in-memory demonstrations and do not modify
-the host system.
+the host system. The library provides no default package-manager backend.
+Whole-system software analysis is not implemented yet; a catalog-based
+inventory is planned for the next implementation phase. Checks do not repair
+anything.

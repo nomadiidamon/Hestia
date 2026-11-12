@@ -21,6 +21,7 @@ from Hestia.software.dependency import (
 	SystemLibraryDependency,
 )
 from Hestia.software.dependency import DependencyStatus
+from Hestia.software.doctor import Doctor
 
 
 def configured_library_probe() -> CheckResult:
@@ -79,11 +80,13 @@ def main() -> None:
         ),
     ])
 
+    report = Doctor(registry).run()
     print("Read-only dependency report")
-    for name, result in registry.check_all().items():
+    for name, result in report.dependencies.items():
         version = f" ({result.version})" if result.version else ""
         required = "required" if result.required else "optional"
         print(f"- {name}: {result.status.value}{version}; {required}; {result.message}")
+    print(f"Failed dependencies: {list(report.failed_dependencies)}")
 
 
 if __name__ == "__main__":

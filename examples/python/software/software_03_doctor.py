@@ -51,6 +51,7 @@ def main() -> None:
     before = doctor.run(diagnostics=runtime_diagnostics)
     print("Initial doctor report:")
     print(before.to_dict())
+    print(f"Failed dependencies: {list(before.failed_dependencies)}")
 
     # This action and target come from the application, not from Doctor.
     request = InstallRequest(
@@ -72,10 +73,12 @@ def main() -> None:
     repair = doctor.repair(installer, plan, authorization)
     print("Delegated repair report:")
     print(repair.to_dict())
+    print(f"Failed dependencies: {list(repair.failed_dependencies)}")
 
     after = doctor.run(diagnostics=runtime_diagnostics)
     print("Doctor report after recheck:")
     print(after.to_dict())
+    print(f"Failed dependencies: {list(after.failed_dependencies)}")
     print(f"Application healthy: {after.healthy}")
 
 
