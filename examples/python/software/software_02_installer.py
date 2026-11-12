@@ -8,6 +8,7 @@ from Hestia.software.dependency import DependencyStatus
 from Hestia.software.installer import (
 	InstallAuthorization,
 	InstallOutcome,
+    InstallProgressTracker,
 	InstallRequest,
 	Installer,
 )
@@ -63,7 +64,10 @@ def main() -> None:
     except PermissionError as error:
         print(f"Unapproved execution rejected: {error}")
 
+    tracker = InstallProgressTracker()
+
     def show_progress(event) -> None:
+        tracker(event)
         percent = "" if event.completed is None else f" ({event.completed:.0%})"
         print(f"Progress [{event.action_id}]: {event.message}{percent}")
 
@@ -79,6 +83,7 @@ def main() -> None:
     report = installer.execute(plan, authorization, progress=show_progress)
     print("Installation report:")
     print(report.to_dict())
+    print(f"Latest action progress: {tracker.actions}")
     print(f"Failed dependencies: {list(report.failed_dependencies)}")
     print(f"Post-install check succeeded: {report.succeeded}")
 

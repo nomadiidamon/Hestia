@@ -99,6 +99,14 @@ These apply to the implemented hardware package:
   passed to the backend, which must enforce them; Hestia reports a timeout if
   the backend raises `TimeoutError`. Service probes likewise enforce their own
   supplied timeout.
+- `InstallProgressTracker` is a caller-owned, thread-safe callback accepted by
+  installer execution and doctor repair. Its `actions` snapshot contains the
+  latest event per action. Backend progress is a fraction from 0 to 1 or
+  `None` when unknown; invalid fractions are ignored and recorded in
+  `progress_errors`. Terminal events identify action success, failure, timeout,
+  or unsupported backend. Percentages are backend-reported, not independently
+  measured. A successful action reaches 1.0 before the post-install recheck;
+  the final report determines whether the installation as a whole succeeded.
 - These APIs are not a general inventory of installed software. Only
   caller-configured dependencies are checked. Whole-system software analysis
   is planned for the next implementation phase, which will add a software

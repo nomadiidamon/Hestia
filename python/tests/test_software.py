@@ -1,4 +1,5 @@
 import subprocess
+from threading import Event, Thread
 
 import pytest
 
@@ -31,6 +32,7 @@ from Hestia.software.installer import (
 	InstallActionStatus,
 	InstallAuthorization,
 	InstallOutcome,
+	InstallProgressTracker,
 	InstallRequest,
 	Installer,
 )
@@ -248,6 +250,94 @@ def test_installer_requires_scoped_authorization_and_rechecks_with_progress():
 	assert backend.calls[0][1] == 300
 
 
+def test_install_progress_tracker_records_events_during_execution():
+	tracker = InstallProgressTracker()
+	backend = FakeBackend()
+	registry, installer, plan, _ = make_install_setup(backend)
+	backend.on_success = lambda: (
+		tracker.actions["install-engine"].completed == 0.5
+		or pytest.fail("Backend progress was not recorded")
+	)
+	installer.execute(plan, InstallAuthorization("runtime", frozenset({"install-engine"})), progress=tracker)
+	assert tracker.actions["install-engine"].completed == 1.0
+	assert tracker.actions["install-engine"].message == "Installation finished"
+	assert tracker.actions["install-engine"].status is InstallActionStatus.SUCCEEDED
+
+
+def test_install_progress_tracker_can_be_read_while_backend_runs():
+	started = Event()
+	resume = Event()
+	tracker = InstallProgressTracker()
+
+	class BlockingBackend:
+		def install(self, request, *, timeout_seconds, report_progress):
+			report_progress("Downloading", 0.4)
+			started.set()
+			if not resume.wait(5):
+				raise TimeoutError("Test backend was not released")
+			return InstallOutcome(True, "Done")
+
+	registry, installer, plan, _ = make_install_setup()
+	installer.backends["test"] = BlockingBackend()
+	worker = Thread(target=installer.execute, args=(
+		plan, InstallAuthorization("runtime", frozenset({"install-engine"})),
+	), kwargs={"progress": tracker})
+	worker.start()
+	try:
+		assert started.wait(5)
+		assert tracker.actions["install-engine"].completed == 0.4
+		assert tracker.actions["install-engine"].status is None
+	finally:
+		resume.set()
+		worker.join(5)
+	assert not worker.is_alive()
+	assert tracker.actions["install-engine"].status is InstallActionStatus.SUCCEEDED
+
+
+@pytest.mark.parametrize("backend, expected", [
+	(None, InstallActionStatus.UNSUPPORTED),
+	(FakeBackend(succeeds=False), InstallActionStatus.TIMED_OUT),
+	(FakeBackend(outcome_succeeds=False), InstallActionStatus.FAILED),
+])
+def test_install_progress_tracker_reports_terminal_failures(backend, expected):
+	tracker = InstallProgressTracker()
+	registry, installer, plan, _ = make_install_setup(backend)
+	installer.execute(plan, InstallAuthorization("runtime", frozenset({"install-engine"})), progress=tracker)
+	event = tracker.actions["install-engine"]
+	assert event.status is expected
+	assert event.completed is None
+
+
+def test_install_progress_tracker_reports_backend_exception():
+	class FailingBackend:
+		def install(self, request, *, timeout_seconds, report_progress):
+			raise RuntimeError("Backend unavailable")
+
+	registry, installer, plan, _ = make_install_setup()
+	installer.backends["test"] = FailingBackend()
+	tracker = InstallProgressTracker()
+	installer.execute(plan, InstallAuthorization("runtime", frozenset({"install-engine"})), progress=tracker)
+	assert tracker.actions["install-engine"].status is InstallActionStatus.FAILED
+	assert "Backend unavailable" in tracker.actions["install-engine"].message
+
+
+def test_installer_discards_invalid_progress_fractions():
+	class InvalidProgressBackend:
+		def install(self, request, *, timeout_seconds, report_progress):
+			for completed in (-0.1, 1.1, float("nan"), float("inf"), True, 10**400):
+				report_progress("Invalid", completed)
+			return InstallOutcome(True, "Done")
+
+	registry, installer, plan, _ = make_install_setup()
+	installer.backends["test"] = InvalidProgressBackend()
+	events = []
+	report = installer.execute(
+		plan, InstallAuthorization("runtime", frozenset({"install-engine"})), progress=events.append,
+	)
+	assert [event.completed for event in events] == [0.0, 1.0]
+	assert len(report.progress_errors) == 6
+
+
 def test_install_report_is_not_successful_when_recheck_fails():
 	backend = FakeBackend()
 	registry, installer, plan, _ = make_install_setup(backend)
@@ -319,13 +409,16 @@ def test_doctor_aggregates_diagnostics_and_delegates_repair():
 	assert report.to_dict()["failed_dependencies"] == ["engine"]
 	assert report.to_dict()["diagnostics"][0]["code"] == "engine_missing"
 
+	tracker = InstallProgressTracker()
 	installation = doctor.repair(
 		installer,
 		plan,
 		InstallAuthorization("runtime", frozenset({"install-engine"})),
+		progress=tracker,
 	)
 	assert installation.actions[0].status is InstallActionStatus.SUCCEEDED
 	assert installation.failed_dependencies == []
+	assert tracker.actions["install-engine"].status is InstallActionStatus.SUCCEEDED
 
 
 def test_doctor_lists_optional_failures_without_marking_report_unhealthy():

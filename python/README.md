@@ -71,6 +71,17 @@ checks or doctor reports. The doctor aggregates dependency results and
 caller-defined diagnostics; repairs must be explicitly delegated to the
 installer.
 
+To track installations, create an `InstallProgressTracker` from
+`Hestia.software.installer` and pass it as `progress=tracker` to
+`Installer.execute()` or `Doctor.repair()`. `tracker.actions` is a thread-safe
+snapshot keyed by action ID; each event has a `completed` fraction from 0 to 1
+or `None` when unknown, plus a terminal `status` when the action finishes.
+Run the synchronous installation on a worker thread to inspect it while it
+runs. Intermediate fractions come from the backend and are only as accurate as
+its measurements. A successful action reaches 1.0 before dependency rechecks;
+inspect the returned report for overall success. Invalid fractions are ignored
+and reported in `progress_errors`.
+
 The package supports Python versions declared by the project metadata (Python
 3.10 and later).
 

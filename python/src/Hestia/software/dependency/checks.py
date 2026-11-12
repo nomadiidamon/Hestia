@@ -1,4 +1,9 @@
-"""Reusable read-only checks for common software requirements."""
+"""Reusable read-only checks for common software requirements.
+
+@bug Environment-variable checks include raw values in result details, which
+can expose secrets when reports are serialized or logged.
+@todo Consider adding a mechanism to redact sensitive environment variable values from result details.
+"""
 
 from __future__ import annotations
 

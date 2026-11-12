@@ -112,6 +112,16 @@ delegates an already-built plan to the same installer path. An injected backend
 or service probe must enforce the timeout passed to it; Hestia does not
 interrupt it automatically.
 
+Create an `InstallProgressTracker` from `Hestia.software.installer` and pass
+it as `progress=tracker` to `Installer.execute()` or `Doctor.repair()`.
+`tracker.actions` is a thread-safe snapshot keyed by action ID. Each event's
+`completed` is a backend-reported fraction from 0 to 1, or `None` when unknown;
+terminal events carry an action status. Execute on a worker thread to inspect
+progress concurrently. Fractions depend on backend measurements; Hestia does
+not estimate unknown percentages. Action success reaches 1.0 before dependency
+rechecks, so use the returned report for overall success. Invalid fractions
+are ignored and recorded in `progress_errors`.
+
 Runnable model and software examples are in `examples/python/models/` and
 `examples/python/software/`.
 

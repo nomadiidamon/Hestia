@@ -1,4 +1,11 @@
-"""High-level hardware detection orchestration."""
+"""High-level hardware detection orchestration.
+
+@bug A GPU with zero free memory is treated as having unknown free memory,
+which can overstate the memory available for model recommendations.
+@todo Consider adding a mechanism to handle GPUs with zero free memory more accurately.
+@bug Primary accelerator selection includes GPUs marked as unavailable.
+@todo Consider refining primary accelerator selection to exclude unavailable GPUs.
+"""
 
 import logging
 

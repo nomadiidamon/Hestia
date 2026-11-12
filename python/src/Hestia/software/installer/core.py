@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from threading import Lock
 from typing import Callable, Mapping, Protocol, Sequence
 
 from ..dependency import DependencyRegistry, DependencyResult
@@ -64,6 +65,24 @@ class InstallProgress:
 	dependency_name: str
 	message: str
 	completed: float | None = None
+	status: InstallActionStatus | None = None
+
+
+class InstallProgressTracker:
+	"""Keep the most recent progress event for each installation action."""
+
+	def __init__(self) -> None:
+		self._lock = Lock()
+		self._actions: dict[str, InstallProgress] = {}
+
+	def __call__(self, event: InstallProgress) -> None:
+		with self._lock:
+			self._actions[event.action_id] = event
+
+	@property
+	def actions(self) -> dict[str, InstallProgress]:
+		with self._lock:
+			return dict(self._actions)
 
 
 class InstallationBackend(Protocol):
@@ -198,32 +217,41 @@ class Installer:
 		results: list[InstallActionResult] = []
 		progress_errors: list[str] = []
 		for request in plan.actions:
-			backend = self.backends.get(request.backend)
-			if backend is None:
-				results.append(InstallActionResult(
-					request.action_id,
-					request.dependency_name,
-					InstallActionStatus.UNSUPPORTED,
-					request.instructions or f"No installation backend: {request.backend}",
-				))
-				continue
-
-			def report_progress(message: str, completed: float | None = None) -> None:
+			def emit_progress(
+				message: str, completed: float | None = None,
+				status: InstallActionStatus | None = None,
+			) -> None:
 				if progress is None:
+					return
+				if completed is not None and (
+					isinstance(completed, bool)
+					or not isinstance(completed, (int, float))
+					or not 0 <= completed <= 1
+				):
+					progress_errors.append(f"{request.action_id}: invalid progress fraction: {completed!r}")
 					return
 				try:
 					progress(InstallProgress(
-						request.action_id, request.dependency_name, message, completed
+						request.action_id, request.dependency_name, message, completed, status
 					))
 				except Exception as error:
 					progress_errors.append(f"{request.action_id}: {error}")
 
-			report_progress("Installation started", 0.0)
+			backend = self.backends.get(request.backend)
+			if backend is None:
+				message = request.instructions or f"No installation backend: {request.backend}"
+				results.append(InstallActionResult(
+					request.action_id, request.dependency_name, InstallActionStatus.UNSUPPORTED, message,
+				))
+				emit_progress(message, status=InstallActionStatus.UNSUPPORTED)
+				continue
+
+			emit_progress("Installation started", 0.0)
 			try:
 				outcome = backend.install(
 					request,
 					timeout_seconds=self.timeout_seconds,
-					report_progress=report_progress,
+					report_progress=emit_progress,
 				)
 				if not isinstance(outcome, InstallOutcome):
 					raise TypeError("Installation backends must return InstallOutcome")
@@ -234,6 +262,7 @@ class Installer:
 					InstallActionStatus.TIMED_OUT,
 					"Installation backend timed out",
 				))
+				emit_progress("Installation backend timed out", status=InstallActionStatus.TIMED_OUT)
 				continue
 			except Exception as error:
 				results.append(InstallActionResult(
@@ -242,6 +271,7 @@ class Installer:
 					InstallActionStatus.FAILED,
 					f"Installation backend failed: {error}",
 				))
+				emit_progress(f"Installation backend failed: {error}", status=InstallActionStatus.FAILED)
 				continue
 
 			status = InstallActionStatus.SUCCEEDED if outcome.succeeded else InstallActionStatus.FAILED
@@ -252,7 +282,7 @@ class Installer:
 				outcome.message,
 				outcome.details,
 			))
-			report_progress("Installation finished", 1.0 if outcome.succeeded else None)
+			emit_progress("Installation finished", 1.0 if outcome.succeeded else None, status)
 
 		recheck_names = tuple(dict.fromkeys(action.dependency_name for action in plan.actions))
 		rechecks = self.registry.check_all(recheck_names) if recheck_names else {}

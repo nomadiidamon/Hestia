@@ -9,6 +9,7 @@ from Hestia.software.doctor import Diagnostic, DiagnosticSeverity, Doctor
 from Hestia.software.installer import (
 	InstallAuthorization,
 	InstallOutcome,
+    InstallProgressTracker,
 	InstallRequest,
 	Installer,
 )
@@ -70,9 +71,11 @@ def main() -> None:
         group_id="example-application",
         action_ids={"configure-example-runtime"},
     )
-    repair = doctor.repair(installer, plan, authorization)
+    tracker = InstallProgressTracker()
+    repair = doctor.repair(installer, plan, authorization, progress=tracker)
     print("Delegated repair report:")
     print(repair.to_dict())
+    print(f"Latest repair progress: {tracker.actions}")
     print(f"Failed dependencies: {list(repair.failed_dependencies)}")
 
     after = doctor.run(diagnostics=runtime_diagnostics)

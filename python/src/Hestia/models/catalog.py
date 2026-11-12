@@ -36,6 +36,14 @@ Category keys per tier entry:
 
 @todo: Abstract the model recommendation logic to allow dynamic updates and easier maintenance.
 @todo: Create a class to hold a model, size, and category for easier management and retrieval.
+@bug Missing accelerator or tier entries can fall back to a larger model tier
+than the available memory supports while retaining the requested tier label.
+@todo Ensure that fallbacks do not recommend models that exceed the available memory for the given hardware tier.
+@todo Consider adding validation to ensure that all required categories are present for each tier entry.
+@bug Category lookup returns shared catalog lists, so callers can mutate
+future lookup results and recommendations.
+@todo Consider adding a mechanism to prevent mutation of shared catalog lists to ensure consistent recommendations.
+@todo Create a base catalog that defines default entries for all categories, which can be extended or overridden by specific hardware tiers.
 """
 
 from typing import Dict, List
