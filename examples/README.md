@@ -18,6 +18,9 @@ Python hardware examples demonstrate profile detection, serialization and
 reporting; recommendation examples show how to pair a profile with the model
 catalog. Hardware probes are best-effort, so examples also run on CPU-only
 systems without optional GPU interfaces.
+The simulated GPU example shows an integrated Windows detection fallback and a
+multi-GPU profile, using the same report function as real detection. Simulated
+devices do not establish that the corresponding runtime is installed.
 
 The software examples cover configured read-only dependency checks,
 caller-authorized installer workflows, and doctor diagnostics with delegated

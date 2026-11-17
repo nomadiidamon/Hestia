@@ -115,11 +115,15 @@ def print_hardware_report(
         for item in profile.gpus:
             print(f"  [{item.index}] {item.name}")
             print(f"       Type:   {item.accelerator.value}")
-            print(f"       VRAM:   {item.total_memory_gb:.1f} GB total  |  {item.free_memory_gb:.1f} GB free")
-            if item.compute_capability:
-                print(f"       Compute: {item.compute_capability}")
-            if item.driver_version:
-                print(f"       Driver:  {item.driver_version}")
+            free_vram = f"{item.free_memory_gb:.1f} GB" if item.free_memory_gb is not None else "n/a"
+            print(f"       VRAM:   {item.total_memory_gb:.1f} GB total  |  {free_vram} free")
+            print(f"       Compute:    {item.compute_capability if item.compute_capability is not None else 'n/a'}")
+            print(f"       Driver:     {item.driver_version if item.driver_version is not None else 'n/a'}")
+            print(f"       PCI bus:    {item.pci_bus_id if item.pci_bus_id is not None else 'n/a'}")
+            print(f"       UUID:       {item.uuid if item.uuid is not None else 'n/a'}")
+            print(f"       PCI vendor: {item.pci_vendor_id if item.pci_vendor_id is not None else 'n/a'}")
+            print(f"       PCI device: {item.pci_device_id if item.pci_device_id is not None else 'n/a'}")
+            print(f"       PNP device: {item.pnp_device_id if item.pnp_device_id is not None else 'n/a'}")
     else:
         print("\nGPU:       None detected - CPU only")
     print(f"\nPlatform:  {profile.platform_name} {profile.platform_version}")

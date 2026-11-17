@@ -36,6 +36,19 @@ recommendation = Hestia.recommend_model(profile)
 Hestia.print_hardware_report(profile, recommendation)
 ```
 
+GPU free memory is `None` when a probe cannot measure it, and `0.0` when
+measured as zero. The model-memory estimate falls back to available system RAM
+when the selected accelerator has no known free-memory measurement.
+On Windows, `pnp_device_id` contains the device instance ID when available;
+it is distinct from a GPU UUID. A PCI address omits the domain when Windows
+reports only a single-segment bus location, unless Level Zero or HIP supplies it.
+Intel GPU UUIDs are obtained from the optional Level Zero runtime when the
+device can be matched unambiguously by PCI address. A UUID is not guaranteed
+to be a persistent hardware serial number.
+AMD GPU UUIDs are similarly obtained through the optional HIP runtime, when
+its beta UUID API supports the device. Both runtimes must be discoverable by
+the system library loader; otherwise UUIDs remain unknown.
+
 Currently only caller-registered dependencies are checked; whole-system
 software analysis is planned for the next implementation phase, which will add
 a software catalog. Built-in checks cover Python packages,

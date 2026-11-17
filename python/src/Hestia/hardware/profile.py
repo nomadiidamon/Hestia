@@ -8,16 +8,21 @@ from ..types import AcceleratorType
 
 @dataclass(frozen=True)
 class GPUInfo:
-    """Capability information for one detected GPU."""
+    """Capability information for one detected GPU; unknown free memory is None."""
 
     index: int
     name: str
     accelerator: AcceleratorType
     total_memory_gb: float
-    free_memory_gb: float
+    free_memory_gb: Optional[float]
     compute_capability: Optional[str] = None
     driver_version: Optional[str] = None
     is_available: bool = True
+    pci_bus_id: Optional[str] = None
+    uuid: Optional[str] = None
+    pci_vendor_id: Optional[str] = None
+    pci_device_id: Optional[str] = None
+    pnp_device_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         data = asdict(self)

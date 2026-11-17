@@ -55,13 +55,31 @@ These apply to the implemented hardware package:
 
 - Each CPU, memory, platform, and GPU probe is best-effort; unavailable data
   degrades to documented defaults and does not invalidate unrelated fields.
-- Optional tools and libraries (NVML, `rocm-smi`, PowerShell and
-  `system_profiler`) being absent is not an error.
+- Optional tools and libraries (NVML, Intel Level Zero, AMD HIP, `rocm-smi`,
+  PowerShell and `system_profiler`) being absent is not an error.
+- GPU PCI vendor and device IDs use lowercase hexadecimal strings such as
+  `0x8086` when available. Windows PnP device instance IDs are exposed
+  separately as `pnp_device_id`; they are not GPU UUIDs.
+- PCI bus addresses use hexadecimal `domain:bus:device.function` when the
+  domain is known. Windows' single-segment location string omits the domain,
+  so those addresses are reported as `bus:device.function` instead of guessing
+  it unless Level Zero or HIP supplies the full address. Unavailable or
+  unrecognized PCI locations remain `None`.
+- Intel GPU UUIDs are obtained from Level Zero when available and associated
+  by an unambiguous PCI address, not device order. UUIDs may be unavailable
+  and should not be assumed to be persistent hardware serial numbers.
+- AMD GPU UUIDs are obtained from HIP when available and associated by an
+  unambiguous PCI address. The HIP UUID API is beta, and unavailable or
+  unsupported devices retain an unknown UUID.
 - GPU discovery never runs through a shell, and each subprocess probe has a
   timeout.
+- Primary accelerator selection excludes devices marked unavailable.
+- `GPUInfo.free_memory_gb` is `None` when unknown (serialized as JSON `null`);
+  zero means a measured zero. Callers must handle the optional value.
 - `available_for_models_gb` uses 70% of available RAM as headroom and caps it
-  at 80% of reported free memory on the selected accelerator when available.
-  It is an estimate, not a runtime guarantee.
+  at 80% of the smallest known free-memory value among available devices of the
+  selected accelerator type, including measured zero. When no such measurement
+  exists, it uses the RAM estimate. It is an estimate, not a runtime guarantee.
 - A recommendation is advisory catalog data. It does not confirm that a
   runtime supports or has installed a listed model.
 

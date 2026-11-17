@@ -1,11 +1,4 @@
-"""High-level hardware detection orchestration.
-
-@bug A GPU with zero free memory is treated as having unknown free memory,
-which can overstate the memory available for model recommendations.
-@todo Consider adding a mechanism to handle GPUs with zero free memory more accurately.
-@bug Primary accelerator selection includes GPUs marked as unavailable.
-@todo Consider refining primary accelerator selection to exclude unavailable GPUs.
-"""
+"""High-level hardware detection orchestration."""
 
 import logging
 
@@ -58,7 +51,7 @@ class HardwareDetector:
         known_free_vram = [
             item.free_memory_gb
             for item in detected_gpus
-            if item.accelerator is primary and item.is_available and item.free_memory_gb > 0
+            if item.accelerator is primary and item.is_available and item.free_memory_gb is not None
         ]
         if known_free_vram:
             available = min(available, min(known_free_vram) * 0.8)
@@ -86,9 +79,12 @@ class HardwareDetector:
 
 
 def _primary_accelerator(gpus: list[GPUInfo]) -> AcceleratorType:
-    if not gpus:
-        return AcceleratorType.NONE
-    return max(gpus, key=lambda item: _ACCELERATOR_PRIORITY.get(item.accelerator, 0)).accelerator
+    primary = max(
+        (item for item in gpus if item.is_available),
+        key=lambda item: _ACCELERATOR_PRIORITY.get(item.accelerator, 0),
+        default=None,
+    )
+    return primary.accelerator if primary is not None else AcceleratorType.NONE
 
 
 def detect_hardware() -> HardwareProfile:
