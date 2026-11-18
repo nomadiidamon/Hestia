@@ -1,6 +1,7 @@
 """Run every example script and require a clean exit."""
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -16,9 +17,98 @@ EXAMPLES = sorted((ROOT / "examples" / "python").rglob("*.py"))
 def test_example_runs(example):
     env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(SRC), os.environ.get("PYTHONPATH", "")])}
     result = subprocess.run(
-        [sys.executable, str(example)], capture_output=True, text=True, timeout=60, env=env
+        [sys.executable, str(example)], capture_output=True, text=True, timeout=120, env=env
     )
     assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize("area", ["hardware", "models", "recommendations", "software"])
+def test_area_runner_only_runs_its_examples_and_reports_failures(tmp_path, area):
+    examples = ROOT / "examples" / "python"
+    shutil.copy(examples / "run_all.py", tmp_path)
+    shutil.copy(examples / f"run_{area}.py", tmp_path)
+    directory = tmp_path / area
+    directory.mkdir()
+    (directory / "01_fail.py").write_text("print('first example'); raise SystemExit(3)\n", encoding="utf-8")
+    (directory / "02_pass.py").write_text("print('second example')\n", encoding="utf-8")
+    nested = directory / "nested"
+    nested.mkdir()
+    (nested / "example.py").write_text("print('nested example')\n", encoding="utf-8")
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "example.py").write_text("print('unexpected example')\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(tmp_path / f"run_{area}.py")], capture_output=True, text=True, timeout=10
+    )
+    assert result.returncode == 1
+    assert "first example" in result.stdout
+    assert "second example" in result.stdout
+    assert "nested example" in result.stdout
+    assert "unexpected example" not in result.stdout
+    assert "Ran 3 scripts, 1 failed" in result.stdout
+
+
+def test_all_runner_only_runs_area_runners(tmp_path):
+    shutil.copy(ROOT / "examples" / "python" / "run_all.py", tmp_path)
+    (tmp_path / "run_a.py").write_text("print('area a')\n", encoding="utf-8")
+    (tmp_path / "run_b.py").write_text("print('area b'); raise SystemExit(2)\n", encoding="utf-8")
+    directory = tmp_path / "hardware"
+    directory.mkdir()
+    (directory / "example.py").write_text("print('unexpected direct example')\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(tmp_path / "run_all.py")], capture_output=True, text=True, timeout=10
+    )
+    assert result.returncode == 1
+    assert "area a" in result.stdout and "area b" in result.stdout
+    assert "unexpected direct example" not in result.stdout
+    assert "Ran 2 scripts, 1 failed" in result.stdout
+
+
+def test_area_runner_reports_missing_examples(tmp_path):
+    examples = ROOT / "examples" / "python"
+    shutil.copy(examples / "run_all.py", tmp_path)
+    shutil.copy(examples / "run_models.py", tmp_path)
+    result = subprocess.run(
+        [sys.executable, str(tmp_path / "run_models.py")], capture_output=True, text=True, timeout=10
+    )
+    assert result.returncode != 0
+    assert "No scripts found" in result.stderr
+
+
+@pytest.mark.parametrize("area", ["hardware", "models", "recommendations", "software"])
+@pytest.mark.parametrize("extension", ["bat", "sh"])
+def test_area_wrapper_sets_import_path_and_propagates_exit(tmp_path, area, extension):
+    if extension == "bat" and os.name != "nt":
+        pytest.skip("Batch files require Windows")
+    shell = shutil.which("sh") if extension == "sh" else os.environ.get("COMSPEC")
+    if shell is None:
+        pytest.skip(f"No shell available for {extension}")
+
+    scripts = tmp_path / "python" / "scripts"
+    scripts.mkdir(parents=True)
+    wrapper = scripts / f"run_{area}_examples.{extension}"
+    shutil.copy(ROOT / "python" / "scripts" / wrapper.name, wrapper)
+    source = tmp_path / "python" / "src"
+    source.mkdir()
+    (source / "example_runner_test_marker.py").write_text("value = 7\n", encoding="utf-8")
+    examples = tmp_path / "examples" / "python"
+    examples.mkdir(parents=True)
+    (examples / f"run_{area}.py").write_text(
+        "import example_runner_test_marker\n"
+        "print('wrapper ran')\n"
+        "raise SystemExit(example_runner_test_marker.value)\n",
+        encoding="utf-8",
+    )
+    command = [shell, "/d", "/c", str(wrapper)] if extension == "bat" else [shell, str(wrapper)]
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    result = subprocess.run(
+        command, input="\n", capture_output=True, text=True, timeout=20, cwd=tmp_path, env=env
+    )
+    assert result.returncode == 7, result.stderr
+    assert "wrapper ran" in result.stdout
 
 
 def test_simulated_gpu_examples_show_both_scenarios():

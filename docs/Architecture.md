@@ -104,8 +104,11 @@ python/src/Hestia/
 +-- __init__.py        # Stable public facade
 +-- types.py           # Shared enums: AcceleratorType, ModelSize
 +-- model_catalog.py   # Legacy import path; re-exports models.catalog
-+-- models/            # Implemented: catalog, ModelInfo, get_model_info()
++-- models/            # Typed model catalog and model recommendations
 |   +-- catalog.py
+|   +-- catalog_data.py
+|   +-- model_catalog.py
+|   +-- model_recommender.py
 |   `-- info.py
 +-- hardware/          # CPU, memory, GPU, platform and profile detection
 |   +-- cpu.py
@@ -114,7 +117,7 @@ python/src/Hestia/
 |   +-- platform.py
 |   +-- profile.py
 |   `-- detector.py
-|-- recommender.py     # Cross-area hardware + model recommendation
+|-- recommender.py     # Generic contracts and legacy recommendation exports
 `-- software/          # Python dependency checks, installer, doctor reports
   |-- dependency/    # Typed requirements and read-only checks
   |-- installer/     # Caller-authorized backend execution and rechecks
@@ -124,9 +127,9 @@ python/src/Hestia/
 Dependency rules:
 
 - `types.py` imports nothing from the package.
-- `models/`, `hardware/` and `software/` may import `types.py`, but never each
-  other's implementation modules. In particular `models/` must not import
-  `hardware/` (a test enforces this).
+- `models/`, `hardware/` and `software/` may import `types.py`. Importing
+  `models/` does not load `hardware/` (a test enforces this); the model
+  recommender accepts hardware profiles and loads detection on demand.
 - `software/doctor/` and `software/installer/` depend on `software/dependency/`.
   Dependency checks are read-only. Installation uses caller-supplied inputs,
   authorization scope, and backends; doctor delegates requested repairs to the
@@ -139,8 +142,8 @@ Dependency rules:
 - Doctor and installer reports expose `failed_dependencies` as an ordered list
   of names, as well as detailed per-dependency/action results.
 - Nothing in Hestia may import Domus-AI or its subsystems.
-- Recommendations that combine hardware and models are layered on top of
-  these packages, not inside `models/`.
+- Generic recommendation contracts live at the package top level; the model
+  recommender lives in `models/` and consumes hardware profiles.
 
 The top-level `Hestia/__init__.py` is the public facade; subpackage
 `__init__.py` files re-export their supported names.

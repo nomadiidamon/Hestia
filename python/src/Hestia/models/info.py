@@ -4,7 +4,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union
 
 from ..types import AcceleratorType, ModelSize
-from .catalog import KNOWN_CATEGORIES, MODEL_DATABASE, TierEntry, get_category, get_tier
+from .catalog import KNOWN_CATEGORIES, MODEL_CATALOG, TierEntry, get_category
+from .model_catalog import ModelCatalogEntry
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,18 @@ class ModelInfo:
             performance=str(entry.get("performance", "")),
         )
 
+    @classmethod
+    def from_catalog_entry(cls, entry: ModelCatalogEntry) -> "ModelInfo":
+        return cls(
+            accelerator=entry.accelerator,
+            size=entry.size,
+            categories={c: [model.name for model in models] for c, models in entry.categories.items()},
+            quantization=entry.quantization,
+            batch_size=entry.batch_size,
+            context=entry.context,
+            performance=entry.performance,
+        )
+
     def get(self, category: str) -> List[str]:
         return list(self.categories.get(category, []))
 
@@ -57,12 +70,11 @@ def get_model_info(
     A single lookup uses get_tier() and so applies its fallback rules.
     """
     if accelerator is not None and size is not None:
-        return ModelInfo.from_entry(accelerator, size, get_tier(accelerator, size))
+        return ModelInfo.from_catalog_entry(MODEL_CATALOG.resolve(accelerator, size))
 
     return [
-        ModelInfo.from_entry(acc, sz, entry)
-        for acc, tiers in MODEL_DATABASE.items()
-        if accelerator is None or acc == accelerator
-        for sz, entry in tiers.items()
-        if size is None or sz == size
+        ModelInfo.from_catalog_entry(entry)
+        for entry in MODEL_CATALOG.entries
+        if accelerator is None or entry.accelerator == accelerator
+        if size is None or entry.size == size
     ]

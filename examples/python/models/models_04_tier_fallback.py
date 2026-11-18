@@ -7,8 +7,8 @@ from Hestia.types import AcceleratorType, ModelSize
 
 # Intel has no XLARGE entry, so the LARGE entry is returned.
 intel = get_tier(AcceleratorType.INTEL_ONEAPI, ModelSize.XLARGE)
-print(intel is MODEL_DATABASE[AcceleratorType.INTEL_ONEAPI][ModelSize.LARGE])
+print(intel == MODEL_DATABASE[AcceleratorType.INTEL_ONEAPI][ModelSize.LARGE])
 
-# An accelerator with no catalog data falls back to CPU MEDIUM.
+# An accelerator with no catalog data falls back to CPU TINY.
 hexagon = get_tier(AcceleratorType.QUALCOMM_HEXAGON, ModelSize.TINY)
-print(hexagon is MODEL_DATABASE[AcceleratorType.NONE][ModelSize.MEDIUM])
+print(hexagon == MODEL_DATABASE[AcceleratorType.NONE][ModelSize.TINY])

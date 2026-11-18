@@ -22,6 +22,16 @@ The simulated GPU example shows an integrated Windows detection fallback and a
 multi-GPU profile, using the same report function as real detection. Simulated
 devices do not establish that the corresponding runtime is installed.
 
+Run one Python example area with `examples/python/run_hardware.py`,
+`run_models.py`, `run_recommendations.py` or `run_software.py`. Run
+`examples/python/run_all.py` to run all four area runners. The matching
+`python/scripts/run_hardware_examples`, `run_models_examples`,
+`run_recommendations_examples` and `run_software_examples` wrappers are
+available with `.bat` and `.sh` extensions;
+`run_examples` runs all areas. The wrappers set `PYTHONPATH` and pause before
+exiting. When running Python scripts directly, set `PYTHONPATH` to `python/src`
+or install the package first.
+
 The software examples cover configured read-only dependency checks,
 caller-authorized installer workflows, and doctor diagnostics with delegated
 repair. Installation backends are in-memory demonstrations and do not modify

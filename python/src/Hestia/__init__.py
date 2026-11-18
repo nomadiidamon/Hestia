@@ -6,7 +6,7 @@ from .models import ModelInfo, get_model_info
 from .types import AcceleratorType, ModelSize
 
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 
 __all__ = [
@@ -16,7 +16,11 @@ __all__ = [
 	"HardwareProfile",
 	"ModelInfo",
 	"ModelRecommendation",
+	"ModelRecommendationWeight",
 	"ModelRecommender",
+	"Recommendation",
+	"RecommendationWeight",
+	"Recommender",
 	"ModelSize",
 	"__version__",
 	"detect_hardware",
@@ -30,7 +34,11 @@ __all__ = [
 _HARDWARE_EXPORTS = {"GPUInfo", "HardwareDetector", "HardwareProfile", "detect_hardware"}
 _RECOMMENDER_EXPORTS = {
 	"ModelRecommendation",
+	"ModelRecommendationWeight",
 	"ModelRecommender",
+	"Recommendation",
+	"RecommendationWeight",
+	"Recommender",
 	"get_system_summary",
 	"print_hardware_report",
 	"recommend_model",

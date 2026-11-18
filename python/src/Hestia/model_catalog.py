@@ -2,6 +2,7 @@
 
 from .models.catalog import (
     KNOWN_CATEGORIES,
+    MODEL_CATALOG,
     MODEL_DATABASE,
     TIER_FALLBACK_ORDER,
     TierEntry,

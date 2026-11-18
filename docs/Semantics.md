@@ -21,26 +21,52 @@ outcomes.
 - Software checks are read-only. Installation can change the environment only
   through an explicitly requested action executed by a caller-supplied backend.
 - Hestia was abstracted from, but never imports Domus-AI or its subsystems.
-- `Hestia.models` never imports `Hestia.hardware` (or `software`).
+- Importing `Hestia.models` does not import `Hestia.hardware` or `software`;
+  detecting hardware through the recommendation helper loads hardware on demand.
 - The three information areas are independently callable.
 
 ### Catalog lookup
 
 - **Tier resolution:** `get_tier(accelerator, size)` returns the exact entry
-  when present. Otherwise it tries the tiers in the order `LARGE`, `MEDIUM`,
-  `SMALL`, `TINY` for the same accelerator and returns the first that exists.
-  If the accelerator has no entry at all, it returns the CPU `MEDIUM` entry.
-  It never raises for any valid enum combination.
-- **Required keys:** every catalog entry contains `models`, `thinking`,
-  `tools`, `vision`, `quantization`, `batch_size`, `context` and `performance`.
+  or the nearest smaller tier for that accelerator, then tries CPU tiers at or
+  below the requested tier. A sparse custom catalog raises `LookupError` if
+  neither has a suitable entry. The built-in catalog covers every enum pair.
+- **Required keys:** the typed catalog supplies empty `models`, `thinking`,
+  `tools` and `vision` categories when absent and validates required settings.
+- **Legacy views:** `MODEL_DATABASE` is a snapshot for existing callers;
+  mutations do not alter the typed catalog. `get_tier()` returns a fresh
+  dictionary, and `get_category()` returns a fresh list.
 - **Unknown categories:** `get_category(entry, name)` returns an empty list
   for a category the entry does not have.
 - **Model info:** `get_model_info(accelerator, size)` returns one immutable
-  `ModelInfo` using the same resolution rules as `get_tier()`. If either
+  `ModelInfo` identifying the resolved accelerator and tier. If either
   argument is omitted it returns a list of all matching entries. Result
   ordering follows the catalog order.
 - **Serialization:** `ModelInfo.to_dict()` serializes enums to their string
   `value`, and category lists are copies, so callers cannot mutate the catalog.
+
+### Model recommendations
+
+- `ModelRecommendationWeight` can cap available memory, tier and total
+  parameters in billions independently. Families are exact case-insensitive
+  names before `:`; included capabilities match any listed category, while
+  excluded capabilities remove models present in any excluded category.
+  Family preferences reorder results without excluding other families.
+- Memory selection uses the smaller of the hardware budget and the optional
+  cap. Each model's estimated weight memory is parameter billions multiplied by
+  one billion and quantization bits divided by eight, plus 25% overhead, then
+  divided by 1024^3. Although the API says GB, hardware memory values and these
+  estimates use GiB. They are not measured allocations: context, runtime, quantization and
+  architecture can require more memory. They cannot guarantee a model fits or
+  enforce a runtime memory limit. Unknown parameter counts are excluded.
+- Tier thresholds in GB are `<2`, `2-<4`, `4-<12`, `12-<40`, and `40+`.
+  Built-in catalog parameter ranges, across all capabilities and accelerators,
+  are respectively 0.6-1.8B, 1-3.8B, 1.8-13B, 7-35B and 22-104B.
+  These ranges overlap and are descriptive, not tier limits; model tags are
+  used as estimates of total parameters, including for MoE models.
+- When no entries survive the constraints, the returned lists are empty and
+  `reasoning` explains the exclusion. `categories` also includes any custom
+  catalog categories.
 
 ### Compatibility
 

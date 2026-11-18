@@ -37,18 +37,21 @@ data for `NVIDIA_CUDA`, `AMD_ROCM`, `INTEL_ONEAPI`, `APPLE_METAL` and `NONE`.
 A memory-based class of model that a machine can run, represented by
 `ModelSize`: `TINY`, `SMALL`, `MEDIUM`, `LARGE` and `XLARGE`. The tier is
 chosen from the memory available for models, and it selects a catalog entry.
+Tier names do not enforce parameter-count ranges; see `Semantics.md` for the
+overlapping ranges in the current catalog and the memory-estimation limits.
 
 ### Model catalog
 
-A static database keyed by accelerator, then by tier. Each entry lists model
-names per category (`models`, `thinking`, `tools`, `vision`) and recommended
+A typed catalog keyed by accelerator and tier. Each entry lists model records
+per category (`models`, `thinking`, `tools`, `vision`) and recommended
 settings: `quantization`, `batch_size`, `context` and `performance`. Not every
 accelerator has every tier (for example Intel has no `XLARGE`, and CPU only
 has `TINY` to `MEDIUM`), so lookups fall back (see `Semantics.md`).
 
 ### ModelInfo
 
-A typed, immutable view of one catalog entry, returned by `get_model_info()`.
+A frozen dataclass view of one catalog entry, returned by `get_model_info()`;
+its category lists are independent copies.
 
 ### Hardware profile
 
@@ -110,13 +113,14 @@ an input to the recommender.
 |---|---|
 | Accelerator, tier | `Hestia.types.AcceleratorType`, `Hestia.types.ModelSize` |
 | Catalog | `Hestia.models.MODEL_DATABASE`, `get_tier()`, `get_category()` |
+| Typed catalog | `Hestia.models.MODEL_CATALOG`, `ModelCatalog`, `ModelCatalogEntry`, `ModelRecord` |
 | Catalog entry view | `Hestia.models.ModelInfo`, `get_model_info()` |
 | Hardware profile | `Hestia.hardware.HardwareProfile`, `GPUInfo`, `HardwareDetector` |
 | Dependency checks | `Hestia.software.dependency` |
 | Doctor reports | `Hestia.software.doctor` |
 | Caller-authorized installation | `Hestia.software.installer` |
 | General software inventory | Not implemented |
-| Recommendation | `Hestia.recommender.ModelRecommender`, `ModelRecommendation` |
+| Recommendation | `Hestia.models.ModelRecommender`, `ModelRecommendation`, `ModelRecommendationWeight` |
 
 The C++ implementation is a placeholder; the Python implementation is the
 active implementation.

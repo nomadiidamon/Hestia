@@ -36,6 +36,26 @@ recommendation = Hestia.recommend_model(profile)
 Hestia.print_hardware_report(profile, recommendation)
 ```
 
+For constrained recommendations, pass `ModelRecommendationWeight` to
+`recommend_model()`; capabilities and model families are separate filters.
+For example:
+
+```python
+from Hestia.models import ModelRecommendationWeight, recommend_model
+
+weight = ModelRecommendationWeight(
+    max_memory_gb=6, max_parameters_billions=8,
+    include_capabilities={"tools"}, exclude_families={"llama3.1"},
+)
+recommendation = recommend_model(profile, weight)
+```
+
+Memory filtering is an estimate of model weights, not a runtime limit or a
+guarantee that a model fits. See `docs/Semantics.md` for tier ranges, filter
+semantics, and the estimation formula. For custom entries, construct a
+`ModelCatalog` and pass it to `ModelRecommender(..., catalog=...)`; the legacy
+`MODEL_DATABASE` is a separate snapshot.
+
 GPU free memory is `None` when a probe cannot measure it, and `0.0` when
 measured as zero. The model-memory estimate falls back to available system RAM
 when the selected accelerator has no known free-memory measurement.

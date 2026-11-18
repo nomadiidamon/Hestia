@@ -11,6 +11,9 @@ from Hestia.models import (
     KNOWN_CATEGORIES,
     MODEL_DATABASE,
     ModelInfo,
+    ModelCatalog,
+    ModelCatalogEntry,
+    ModelRecord,
     get_category,
     get_model_info,
     get_tier,
@@ -37,14 +40,43 @@ def test_get_tier_always_resolves(acc, size):
 
 
 def test_fallback_for_missing_tier():
-    assert get_tier(AcceleratorType.INTEL_ONEAPI, ModelSize.XLARGE) is MODEL_DATABASE[
+    assert get_tier(AcceleratorType.INTEL_ONEAPI, ModelSize.XLARGE) == MODEL_DATABASE[
         AcceleratorType.INTEL_ONEAPI
     ][ModelSize.LARGE]
 
 
 def test_unknown_accelerator_falls_back_to_cpu():
     entry = get_tier(AcceleratorType.QUALCOMM_HEXAGON, ModelSize.TINY)
-    assert entry is MODEL_DATABASE[AcceleratorType.NONE][ModelSize.MEDIUM]
+    assert entry == MODEL_DATABASE[AcceleratorType.NONE][ModelSize.TINY]
+
+
+def test_category_results_do_not_mutate_catalog():
+    entry = get_tier(AcceleratorType.NONE, ModelSize.TINY)
+    models = get_category(entry, "models")
+    models.clear()
+    assert get_category(entry, "models")
+    entry["models"].clear()
+    assert get_tier(AcceleratorType.NONE, ModelSize.TINY)["models"]
+
+
+def test_model_info_reports_resolved_tier_and_accelerator():
+    info = get_model_info(AcceleratorType.QUALCOMM_HEXAGON, ModelSize.TINY)
+    assert info.accelerator is AcceleratorType.NONE
+    assert info.size is ModelSize.TINY
+
+    info = get_model_info(AcceleratorType.INTEL_ONEAPI, ModelSize.XLARGE)
+    assert info.size is ModelSize.LARGE
+
+
+def test_sparse_catalog_never_falls_upward_and_defaults_categories():
+    model = ModelRecord("example:1b", "example", 1)
+    entry = ModelCatalogEntry(AcceleratorType.NONE, ModelSize.MEDIUM, {"models": (model,)},
+                              "q4_k_m", 1, 4096, "Slow")
+    assert entry.categories["vision"] == ()
+    with pytest.raises(LookupError):
+        ModelCatalog([entry]).resolve(AcceleratorType.QUALCOMM_HEXAGON, ModelSize.TINY)
+    with pytest.raises(ValueError, match="Duplicate"):
+        ModelCatalog([entry, entry])
 
 
 def test_get_category_unknown_is_empty():
@@ -81,7 +113,7 @@ def test_release_version_matches_shared_metadata_and_docs():
         for line in doxyfile.splitlines()
         if line.strip().startswith("PROJECT_NUMBER")
     )
-    assert Hestia.__version__ == "0.3.1"
+    assert Hestia.__version__ == "0.3.2"
     assert metadata["project"]["version"] == Hestia.__version__
     assert doxy_version == Hestia.__version__
 
