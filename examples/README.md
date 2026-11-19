@@ -36,13 +36,14 @@ catalog. See [Hardware examples](#hardware-examples) for profile detection.
 
 ## Software examples
 
-The software examples cover configured read-only dependency checks,
-caller-authorized installer workflows, and doctor diagnostics with delegated
-repair. Installation backends are in-memory demonstrations and do not modify
-the host system. The library provides no default package-manager backend.
-Configured CLI inventory is available separately; it is not an exhaustive
-installed-software scan. See [Software inventory](../python/README.md#software-inventory)
-for its scope. Checks do not repair anything.
+The software examples cover configured CLI detection, profile serialization,
+custom software catalogs, read-only dependency checks, caller-authorized
+installer workflows, and doctor diagnostics with delegated repair. Installation
+backends are in-memory demonstrations and do not modify the host system. The
+library provides no default package-manager backend. Configured CLI inventory
+is not an exhaustive installed-software scan. See
+[Software inventory](../python/README.md#software-inventory) for its scope.
+Checks do not repair anything.
 
 ## Running Python examples
 
