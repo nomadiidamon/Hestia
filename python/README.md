@@ -24,6 +24,8 @@ python -m pip install "hestia-system[dev]"     # pytest
 
 ## Usage
 
+### Hardware and model overview
+
 ```python
 from Hestia import AcceleratorType, ModelSize, get_model_info
 import Hestia
@@ -35,6 +37,11 @@ profile = Hestia.detect_hardware()
 recommendation = Hestia.recommend_model(profile)
 Hestia.print_hardware_report(profile, recommendation)
 ```
+
+### Model recommendations
+
+This example uses the hardware `profile` from
+[Hardware and model overview](#hardware-and-model-overview).
 
 For constrained recommendations, pass `ModelRecommendationWeight` to
 `recommend_model()`; capabilities and model families are separate filters.
@@ -56,12 +63,12 @@ semantics, and the estimation formula. For custom entries, construct a
 `ModelCatalog` and pass it to `ModelRecommender(..., catalog=...)`; the legacy
 `MODEL_DATABASE` is a separate snapshot.
 
+### Hardware profile
+
 GPU free memory is `None` when a probe cannot measure it, and `0.0` when
 measured as zero. The model-memory estimate falls back to available system RAM
 when the selected accelerator has no known free-memory measurement.
-On Windows, `pnp_device_id` contains the device instance ID when available;
-it is distinct from a GPU UUID. A PCI address omits the domain when Windows
-reports only a single-segment bus location, unless Level Zero or HIP supplies it.
+
 Intel GPU UUIDs are obtained from the optional Level Zero runtime when the
 device can be matched unambiguously by PCI address. A UUID is not guaranteed
 to be a persistent hardware serial number.
@@ -69,7 +76,15 @@ AMD GPU UUIDs are similarly obtained through the optional HIP runtime, when
 its beta UUID API supports the device. Both runtimes must be discoverable by
 the system library loader; otherwise UUIDs remain unknown.
 
-On macOS, the CPU brand is read from `sysctl` when Python reports only a
+#### Windows
+
+`pnp_device_id` contains the device instance ID when available; it is distinct
+from a GPU UUID. A PCI address omits the domain when Windows reports only a
+single-segment bus location, unless Level Zero or HIP supplies it.
+
+#### macOS
+
+The CPU brand is read from `sysctl` when Python reports only a
 generic architecture name. Apple GPU memory is shared with system RAM, so the
 profile uses a memory amount only when `system_profiler` reports one; otherwise
 total GPU memory is 0 GB and free GPU memory is unknown. When a Metal device
@@ -88,9 +103,64 @@ empty when none of the checked families are supported. Apple silicon GPUs do
 not expose PCI/PNP identifiers through this probe, and macOS does not report a
 separate graphics driver version here.
 
-Currently only caller-registered dependencies are checked; whole-system
-software analysis is planned for the next implementation phase, which will add
-a software catalog. Built-in checks cover Python packages,
+### Software inventory
+
+The configured CLI inventory is independent of dependency checks:
+
+```python
+import Hestia
+
+profile = Hestia.detect_software(probe_versions=False)
+for tool in profile.tools:
+    print(tool.name, tool.present, tool.executable_path, tool.version_status.value)
+```
+
+The default catalog covers Git, Python, and Ollama. It searches only configured
+executable names on `PATH`, in alias order, and includes missing tools. Supply a
+sequence of `Hestia.software.SoftwareDefinition` objects as `catalog` to replace
+the default catalog. Aliases must be command names, not paths. Lookup uses
+Python's `shutil.which`. Names must be unique ignoring case. Version probes are
+enabled by default, execute the discovered program with configured arguments,
+and have a per-tool timeout (five seconds by default). A configured executable
+can have side effects; use `probe_versions=False` to avoid executing it.
+Missing tools, unsupported probes, unrecognized versions, failures, and
+timeouts are reported separately in `version_status`; a failed probe does not
+make a found executable absent.
+`profile.to_dict()` produces a JSON-friendly snapshot in catalog order. This is
+not an exhaustive inventory of installed applications or evidence that a
+runtime is healthy or compatible with a model.
+
+#### Platform-specific catalog rules
+
+A definition may replace its default aliases and version rules for specific
+`sys.platform` values:
+
+```python
+from Hestia.software import SoftwareCommand, SoftwareDefinition
+
+parse_version = lambda output: output.strip() or None
+tool = SoftwareDefinition(
+    "example", ("example",), ("--version",), parse_version,
+    platform_commands={
+        "win32": SoftwareCommand(("example-cli",), ("version",), parse_version),
+    },
+)
+profile = Hestia.detect_software((tool,))
+```
+
+The matching platform command replaces the default completely; if it is
+missing, discovery does not retry the default. Platforms without an override
+use the default. Probe output is decoded using the platform's default encoding
+with replacement for undecodable bytes, which may leave the version unknown.
+
+#### Windows
+
+`shutil.which` has platform-specific current-directory behavior. Windows batch
+files are not version-probed.
+
+### Dependency checks and doctor reports
+
+Only caller-registered dependencies are checked. Built-in checks cover Python packages,
 commands, files, directories, and environment variables. Callers can supply
 probes for services, system libraries, drivers, and custom requirements.
 Checks and doctor reports are read-only. A command version query runs only
@@ -112,6 +182,8 @@ print(report.failed_dependencies)
 `failed_dependencies` is an ordered list callers can display to end users or
 use to choose which caller-defined repairs to offer.
 
+### Installation
+
 Installation is performed only through caller-supplied requests and injected
 backends, with authorization scoped to the approved dependency group and
 actions. The installer skips already-satisfied dependencies, reports
@@ -123,6 +195,8 @@ checks or doctor reports. The doctor aggregates dependency results and
 caller-defined diagnostics; repairs must be explicitly delegated to the
 installer.
 
+#### Installation progress
+
 To track installations, create an `InstallProgressTracker` from
 `Hestia.software.installer` and pass it as `progress=tracker` to
 `Installer.execute()` or `Doctor.repair()`. `tracker.actions` is a thread-safe
@@ -133,6 +207,8 @@ runs. Intermediate fractions come from the backend and are only as accurate as
 its measurements. A successful action reaches 1.0 before dependency rechecks;
 inspect the returned report for overall success. Invalid fractions are ignored
 and reported in `progress_errors`.
+
+## Requirements
 
 The package supports Python versions declared by the project metadata (Python
 3.10 and later).
@@ -146,6 +222,8 @@ cd python
 python -m pip install -e ".[dev]"
 python -m pytest
 ```
+
+### Package metadata
 
 Package metadata is maintained in the repository's `project.ini`. Source
 distributions include a copy of that file so they can be built independently

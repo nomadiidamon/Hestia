@@ -20,10 +20,12 @@ We as members, contributors, and leaders pledge to make participation in our com
 - Sexual identity and orientation
 
 
-### Our Standards
+## Our Standards
 We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
 
 
-### Failure to meet these standards can result in temporary or permanent consequences as determined by the community leaders.
+## Consequences
+
+Failure to meet these standards can result in temporary or permanent consequences as determined by the community leaders.
 
 

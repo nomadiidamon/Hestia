@@ -1,4 +1,4 @@
-"""Run software dependency, installer, and doctor tests."""
+"""Run software inventory, dependency, installer, and doctor tests."""
 import os
 import subprocess
 import sys
@@ -6,7 +6,9 @@ from pathlib import Path
 
 PYTHON_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_FILE = PYTHON_DIR / "tests" / "test_output.txt"
-TARGETS = ["tests/test_software.py"]
+TARGETS = [
+    "tests/software",
+]
 
 
 def main() -> int:

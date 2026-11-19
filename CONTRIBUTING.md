@@ -63,7 +63,23 @@ Python 3.10 or newer is required. From the `python/` directory, create a virtual
 ```bash
 cd python
 python -m venv .venv
-# Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
+```
+
+#### Windows: Command Prompt
+
+```bat
+.venv\Scripts\activate
+```
+
+#### macOS and Linux
+
+```bash
+source .venv/bin/activate
+```
+
+#### Install dependencies and run tests
+
+```bash
 pip install -e ".[dev]"
 ```
 

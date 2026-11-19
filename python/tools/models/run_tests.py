@@ -6,7 +6,11 @@ from pathlib import Path
 
 PYTHON_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_FILE = PYTHON_DIR / "tests" / "test_output.txt"
-TARGETS = ["tests/test_models.py", "tests/test_examples.py"]
+TARGETS = [
+    "tests/models/test_models.py",
+    "tests/models/test_recommender.py",
+    "tests/test_examples.py",
+]
 
 
 def main() -> int:

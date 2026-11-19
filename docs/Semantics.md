@@ -81,16 +81,13 @@ These apply to the implemented hardware package:
 
 - Each CPU, memory, platform, and GPU probe is best-effort; unavailable data
   degrades to documented defaults and does not invalidate unrelated fields.
-- Optional tools and libraries (NVML, Intel Level Zero, AMD HIP, `rocm-smi`,
-  PowerShell and `system_profiler`) being absent is not an error.
+- Optional tools and libraries (NVML, Intel Level Zero, AMD HIP and `rocm-smi`)
+  being absent is not an error. See the platform subsections below for
+  additional optional tools.
 - GPU PCI vendor and device IDs use lowercase hexadecimal strings such as
-  `0x8086` when available. Windows PnP device instance IDs are exposed
-  separately as `pnp_device_id`; they are not GPU UUIDs.
+  `0x8086` when available.
 - PCI bus addresses use hexadecimal `domain:bus:device.function` when the
-  domain is known. Windows' single-segment location string omits the domain,
-  so those addresses are reported as `bus:device.function` instead of guessing
-  it unless Level Zero or HIP supplies the full address. Unavailable or
-  unrecognized PCI locations remain `None`.
+  domain is known. Unavailable or unrecognized PCI locations remain `None`.
 - Intel GPU UUIDs are obtained from Level Zero when available and associated
   by an unambiguous PCI address, not device order. UUIDs may be unavailable
   and should not be assumed to be persistent hardware serial numbers.
@@ -106,11 +103,59 @@ These apply to the implemented hardware package:
   at 80% of the smallest known free-memory value among available devices of the
   selected accelerator type, including measured zero. When no such measurement
   exists, it uses the RAM estimate. It is an estimate, not a runtime guarantee.
-- A recommendation is advisory catalog data. It does not confirm that a
-  runtime supports or has installed a listed model.
+- The memory estimate is an input to [model recommendations](#model-recommendations).
+  A recommendation is advisory catalog data; it does not confirm that a runtime
+  supports or has installed a listed model.
 
-### Software dependencies, doctor, and installer
+#### Windows
 
+- PowerShell being absent is not an error.
+- PnP device instance IDs are exposed separately as `pnp_device_id`; they are
+  not GPU UUIDs.
+- A single-segment PCI location omits the domain, so it is reported as
+  `bus:device.function` instead of guessing the domain unless Level Zero or
+  HIP supplies the full address.
+
+#### macOS
+
+- `system_profiler` being absent is not an error.
+
+### Software inventory
+
+- `detect_software()` returns one record per configured CLI tool in catalog
+  order, including absent tools. It tries executable aliases in order and
+  records the first resolved path. The default catalog contains Git, Python,
+  and Ollama; a supplied catalog replaces it, and duplicate names ignoring
+  case are rejected. Aliases are command names, not paths; resolution follows
+  `shutil.which`. This is not a scan of all installed applications.
+- Version probes are enabled by default, execute only configured commands and
+  arguments without requesting a shell, and use a per-command timeout.
+  Disabling probes avoids executing discovered programs. `version_status`
+  distinguishes absent tools, disabled or unsupported probes, detected or
+  unrecognized versions, failures, and
+  timeouts; a found path remains present even if probing fails. Executing a
+  configured program may have side effects; this is not a sandbox. Probe output
+  uses the platform default text encoding with replacement for undecodable
+  bytes; unrecognized versions remain unknown.
+- `SoftwareProfile.to_dict()` preserves catalog order and returns JSON-friendly
+  tool records with presence, path, version, probe status, and a message.
+
+#### Platform-specific catalog rules
+
+- Definitions may specify a `SoftwareCommand` for an exact `sys.platform`
+  value. A matching command replaces the default aliases and version rules,
+  even if none of its aliases is found; other platforms use the default. The
+  platform mapping is copied and cannot be mutated through the definition.
+
+#### Windows
+
+- `shutil.which` has platform-specific current-directory behavior.
+- Windows batch files are not version-probed.
+
+### Software dependency checks
+
+- Dependency checks are independent of [software inventory](#software-inventory)
+  and only caller-configured dependencies are checked.
 - `DependencyRegistry` checks only dependencies explicitly registered by the
   caller, in registration order. Supported built-in checks cover Python
   distributions, commands on `PATH`, files, directories, and environment
@@ -121,6 +166,10 @@ These apply to the implemented hardware package:
   arbitrary commands. Missing, failed, timed-out, and unknown checks are
   reported as structured statuses. A version constraint without a valid,
   reported version is unknown, not guessed.
+- Service probes enforce their own supplied timeout.
+
+### Doctor reports
+
 - `Doctor.run()` aggregates selected dependency checks and caller-provided
   diagnostics. Its `healthy` result is false for a required unsatisfied
   dependency or an error-severity diagnostic; warnings alone do not make it
@@ -128,6 +177,9 @@ These apply to the implemented hardware package:
   dependency result in report order, including optional dependencies. Its
   `to_dict()` form contains a JSON-friendly list. Running a doctor report never
   installs or repairs software.
+
+### Installation
+
 - `Installer.plan()` accepts caller-defined actions for registered
   dependencies and skips dependencies already satisfied. `Installer.execute()`
   requires authorization matching the plan group and every action ID, then
@@ -141,8 +193,8 @@ These apply to the implemented hardware package:
   unsuccessful actions even if a later check reports the dependency satisfied.
   Its `to_dict()` form contains a JSON-friendly list. Installer timeouts are
   passed to the backend, which must enforce them; Hestia reports a timeout if
-  the backend raises `TimeoutError`. Service probes likewise enforce their own
-  supplied timeout.
+  the backend raises `TimeoutError`. For service-probe timeouts, see
+  [software dependency checks](#software-dependency-checks).
 - `InstallProgressTracker` is a caller-owned, thread-safe callback accepted by
   installer execution and doctor repair. Its `actions` snapshot contains the
   latest event per action. Backend progress is a fraction from 0 to 1 or
@@ -151,10 +203,6 @@ These apply to the implemented hardware package:
   or unsupported backend. Percentages are backend-reported, not independently
   measured. A successful action reaches 1.0 before the post-install recheck;
   the final report determines whether the installation as a whole succeeded.
-- These APIs are not a general inventory of installed software. Only
-  caller-configured dependencies are checked. Whole-system software analysis
-  is planned for the next implementation phase, which will add a software
-  catalog.
 
 ## Explicitly Out of Scope
 
@@ -163,10 +211,19 @@ names in the catalog between releases.
 
 ## Testing This Contract
 
-`python/tests/test_models.py` covers the catalog guarantees and the import
-boundary. `python/tests/test_software.py` covers dependency, installer, and
-doctor behavior. `python/tests/test_hardware.py` and
-`python/tests/test_recommender.py` cover detection and recommendation using
-mocks and synthetic data. `python/tests/test_examples.py` runs every example.
-CI must not depend on any specific hardware.
-Run them with `python/scripts/run_tests.bat` or `.sh`.
+Tests are grouped under `python/tests/` by topic: `models/` covers catalog
+guarantees and recommendation behavior, `software/` covers inventory,
+dependency, installer, and doctor behavior, and `hardware/` covers detection.
+Platform-dependent tests are nested under each topic's `platform/` directory;
+the macOS Metal probe test is under `hardware/platform/macos/`, and the Windows
+batch-file test is under `software/platform/windows/`. The root
+`test_examples.py` runs every example. CI must not depend on any specific
+hardware.
+
+### Windows
+
+Run them with `python/scripts/run_tests.bat`.
+
+### macOS and Linux
+
+Run them with `python/scripts/run_tests.sh`.

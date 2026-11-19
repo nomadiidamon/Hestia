@@ -1,4 +1,4 @@
-"""Run the hardware and recommender tests. Extra arguments go to pytest."""
+"""Run the hardware tests. Extra arguments go to pytest."""
 import os
 import subprocess
 import sys
@@ -6,7 +6,9 @@ from pathlib import Path
 
 PYTHON_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_FILE = PYTHON_DIR / "tests" / "test_output.txt"
-TARGETS = ["tests/test_hardware.py", "tests/test_recommender.py"]
+TARGETS = [
+    "tests/hardware",
+]
 
 
 def main() -> int:

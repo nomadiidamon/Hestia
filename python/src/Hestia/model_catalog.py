@@ -1,4 +1,8 @@
-"""Legacy import path; use Hestia.models instead."""
+"""
+Legacy import path; use Hestia.models instead.
+
+@deprecated("Legacy import path; use Hestia.models instead.")
+"""
 
 from .models.catalog import (
     KNOWN_CATEGORIES,

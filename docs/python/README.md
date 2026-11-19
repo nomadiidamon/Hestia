@@ -18,11 +18,12 @@ Distribution name: `hestia-system`. Import name: `Hestia`.
 Implemented: `Hestia.types`, the `Hestia.models` catalog and metadata API,
 `Hestia.hardware` detection/profile APIs, and top-level model recommendations.
 The `Hestia.software.dependency`, `Hestia.software.installer`, and
-`Hestia.software.doctor` frameworks are implemented. General software
-inventory, a `hestia` CLI, and software-informed model recommendations are not
-implemented. Whole-system software analysis is planned for the next
-implementation phase, which will add a software catalog. The legacy
+`Hestia.software.doctor` frameworks and configured CLI inventory are implemented.
+An exhaustive installed-software inventory, a `hestia` CLI, and software-informed
+model recommendations are not implemented. The legacy
 `Hestia.model_catalog` path remains available.
+
+### Software tooling
 
 The software frameworks check only caller-registered requirements. Built-in
 checks cover Python distributions, commands, files, directories, and
@@ -48,7 +49,7 @@ python/
 |   +-- model_catalog.py   # Legacy path
 |   +-- models/
 |   +-- hardware/
-|   +-- software/          # Dependency, installer, and doctor frameworks
+|   +-- software/          # CLI inventory, dependency, installer, and doctor
 |   `-- recommender.py
 +-- tests/             # pytest suite
 +-- scripts/           # clean / run_tests wrappers (.bat and .sh)
@@ -68,13 +69,31 @@ python/
 ```bash
 cd python
 python -m venv .venv
-source .venv/bin/activate      # or .venv\Scripts\activate on Windows
+```
+
+### Windows: Command Prompt
+
+```bat
+.venv\Scripts\activate
+```
+
+### macOS and Linux
+
+```bash
+source .venv/bin/activate
+```
+
+### Install development dependencies
+
+```bash
 pip install -e ".[dev]"
 ```
 
 The build reads `../project.ini`, so install from a full repository checkout.
 
 ## Usage
+
+### Model information
 
 ```python
 import Hestia
@@ -83,6 +102,8 @@ from Hestia import AcceleratorType, ModelSize
 info = Hestia.get_model_info(AcceleratorType.NVIDIA_CUDA, ModelSize.SMALL)
 print(info.get("tools"))
 ```
+
+### Dependency checks and doctor reports
 
 Dependency checks can be composed and reported without performing repairs:
 
@@ -96,11 +117,17 @@ report = Doctor(registry).run()
 print(report.to_dict())
 ```
 
-The registry does not yet scan the machine for all installed software. A
-catalog-based inventory is planned for the next implementation phase.
-Applications currently choose the requirements to register. Command version
+The registry does not scan the machine for all installed software.
+Applications choose the requirements to register. Command version
 queries run only when the caller configures the arguments, and use a timeout;
 the parser is optional.
+
+### Software inventory
+
+Independently, `Hestia.detect_software()` inventories the configured CLI
+catalog; see the package README for version-probe behavior and limitations.
+
+### Installation
 
 The installer accepts only caller-defined install requests and injected
 backends. Execution requires caller-supplied authorization scoped to the
@@ -112,6 +139,8 @@ delegates an already-built plan to the same installer path. An injected backend
 or service probe must enforce the timeout passed to it; Hestia does not
 interrupt it automatically.
 
+#### Installation progress
+
 Create an `InstallProgressTracker` from `Hestia.software.installer` and pass
 it as `progress=tracker` to `Installer.execute()` or `Doctor.repair()`.
 `tracker.actions` is a thread-safe snapshot keyed by action ID. Each event's
@@ -121,6 +150,8 @@ progress concurrently. Fractions depend on backend measurements; Hestia does
 not estimate unknown percentages. Action success reaches 1.0 before dependency
 rechecks, so use the returned report for overall success. Invalid fractions
 are ignored and recorded in `progress_errors`.
+
+### Examples
 
 Runnable model and software examples are in `examples/python/models/` and
 `examples/python/software/`.
@@ -132,28 +163,45 @@ cd python
 pytest
 ```
 
-or use `scripts/run_tests.bat` / `scripts/run_tests.sh`. `tools/run_tests.py`
-delegates to each `tools/<subpackage>/run_tests.py` and collects output in
+`tools/run_tests.py` delegates to each `tools/<subpackage>/run_tests.py` and collects output in
 `tests/test_output.txt`. `tests/test_examples.py` runs every script under
 `examples/python/`.
 
+### Windows
+
+Alternatively, use `scripts/run_tests.bat`.
+
+### macOS and Linux
+
+Alternatively, use `scripts/run_tests.sh`.
+
 ## Scripts and Tools
+
+### Python tools
 
 | Item | Purpose |
 |---|---|
-| `scripts/run_tests.bat`, `.sh` | Run the test suite through `tools/run_tests.py`. |
-| `scripts/clean.bat`, `.sh` | Run `tools/clean.py`. |
 | `tools/run_tests.py` | Runs each sub-package's `run_tests.py`. |
 | `tools/clean.py` | Uninstalls the package, runs each sub-package's `clean.py`, then removes `build`, `dist`, caches, `egg-info` and `__pycache__`. Supports `--dry-run` and `-y`. |
 | `tools/models/run_tests.py` | Runs the models tests and the examples test. |
 | `tools/hardware/run_tests.py` | Runs hardware detection and recommendation tests. |
-| `tools/software/run_tests.py` | Runs dependency, installer, and doctor tests. |
+| `tools/software/run_tests.py` | Runs inventory, dependency, installer, and doctor tests. |
 | `tools/models/clean.py` | Cleans models-related artifacts. |
 | `tools/hardware/clean.py` | Cleans hardware-related artifacts. |
 
 To add a sub-package, create `tools/<name>/clean.py` (picked up
 automatically by `clean.py`) and add the name to `SUITES` in
 `tools/run_tests.py`.
+
+### Windows wrappers
+
+`scripts/run_tests.bat` runs the test suite through `tools/run_tests.py`;
+`scripts/clean.bat` runs `tools/clean.py`.
+
+### macOS and Linux wrappers
+
+`scripts/run_tests.sh` runs the test suite through `tools/run_tests.py`;
+`scripts/clean.sh` runs `tools/clean.py`.
 
 ## Versioning / Metadata
 

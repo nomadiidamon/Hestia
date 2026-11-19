@@ -29,16 +29,25 @@ cpp/
 
 ## Building
 
+### Linux and macOS: Make
+
 ```bash
 cd cpp
-premake5 gmake2      # or: vs2022, xcode4, ninja, etc.
+premake5 gmake2
 make -C build config=release
 ```
 
 > TODO: fill in the actual generated-project directory name and any
 > project-specific premake5 options once `premake5.lua` exists.
 
+### Windows
+
+Use a platform-appropriate premake5 action, such as `vs2022`, instead of
+`gmake2`. Build instructions for the generated project remain to be documented.
+
 ## Running the Tool
+
+### Linux and macOS
 
 ```bash
 # TODO: once tool/ has a real entry point

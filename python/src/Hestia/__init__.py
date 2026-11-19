@@ -6,7 +6,7 @@ from .models import ModelInfo, get_model_info
 from .types import AcceleratorType, ModelSize
 
 
-__version__ = "0.3.3"
+__version__ = "0.4.0"
 
 
 __all__ = [
@@ -22,8 +22,11 @@ __all__ = [
 	"RecommendationWeight",
 	"Recommender",
 	"ModelSize",
+	"SoftwareProfile",
+	"SoftwareTool",
 	"__version__",
 	"detect_hardware",
+	"detect_software",
 	"get_model_info",
 	"get_system_summary",
 	"print_hardware_report",
@@ -32,6 +35,7 @@ __all__ = [
 
 
 _HARDWARE_EXPORTS = {"GPUInfo", "HardwareDetector", "HardwareProfile", "detect_hardware"}
+_SOFTWARE_EXPORTS = {"SoftwareProfile", "SoftwareTool", "detect_software"}
 _RECOMMENDER_EXPORTS = {
 	"ModelRecommendation",
 	"ModelRecommendationWeight",
@@ -48,6 +52,8 @@ _RECOMMENDER_EXPORTS = {
 def __getattr__(name: str):
 	if name in _HARDWARE_EXPORTS:
 		module = import_module(".hardware", __name__)
+	elif name in _SOFTWARE_EXPORTS:
+		module = import_module(".software", __name__)
 	elif name in _RECOMMENDER_EXPORTS:
 		module = import_module(".recommender", __name__)
 	else:

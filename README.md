@@ -17,11 +17,13 @@ cd python
 pip install -e .
 ```
 
+#### Software inventory and dependency tooling
+
 The Python package also provides read-only, caller-configured dependency
 checks, doctor reports, and installation workflows that require caller-defined
-requests, injected backends, and explicit authorization. It does not yet
-provide whole-system software analysis; a catalog-based inventory is planned
-for the next implementation phase. It does not choose packages or package
+requests, injected backends, and explicit authorization. Configured CLI
+inventory is also available; it is not an exhaustive installed-software scan.
+Hestia does not choose packages or package
 managers or install or repair anything during a check or report. See the [Python implementation
 guide](https://nomadiidamon.github.io/Hestia/python_implementation.html) for supported checks and limits.
 

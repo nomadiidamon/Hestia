@@ -8,9 +8,8 @@ Hestia provides system discovery, hardware analysis, reusable software
 dependency checks, and AI model recommendations (see
 [Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html)). Hestia is
 extracted from [Domus-AI](https://nomadiidamon.github.io/Domus-AI) but does not depend on it. The Python implementation
-is active; C++ is currently a placeholder. Whole-system software analysis is
-not implemented yet; a catalog-based inventory is planned for the next
-implementation phase.
+is active; C++ is currently a placeholder. Python can inventory configured
+CLI tools, but does not provide an exhaustive installed-software inventory.
 
 ## Goals
 
@@ -118,13 +117,16 @@ python/src/Hestia/
 |   +-- profile.py
 |   `-- detector.py
 |-- recommender.py     # Generic contracts and legacy recommendation exports
-`-- software/          # Python dependency checks, installer, doctor reports
+`-- software/          # Configured CLI inventory and dependency tooling
+  |-- catalog.py     # Tool identities and default/platform-specific command rules
+  |-- detection.py   # PATH discovery and bounded version queries
+  |-- profile.py     # Structured inventory results
   |-- dependency/    # Typed requirements and read-only checks
   |-- installer/     # Caller-authorized backend execution and rechecks
   `-- doctor/        # Health and diagnostic aggregation
 ```
 
-Dependency rules:
+### Dependency rules
 
 - `types.py` imports nothing from the package.
 - `models/`, `hardware/` and `software/` may import `types.py`. Importing
@@ -134,9 +136,9 @@ Dependency rules:
   Dependency checks are read-only. Installation uses caller-supplied inputs,
   authorization scope, and backends; doctor delegates requested repairs to the
   installer rather than mutating the environment itself.
-- These packages do not yet provide whole-system software analysis; a
-  catalog-based inventory is planned for the next implementation phase. There
-  is no default package-manager backend. Applications define what to check and
+- The inventory searches only configured command names, not all installed
+  applications. Version queries execute discovered programs and are optional.
+  There is no default package-manager backend. Applications define what to check and
   provide installation actions/backends; checks and doctor reports never
   install or repair software implicitly.
 - Doctor and installer reports expose `failed_dependencies` as an ordered list
@@ -144,6 +146,8 @@ Dependency rules:
 - Nothing in Hestia may import Domus-AI or its subsystems.
 - Generic recommendation contracts live at the package top level; the model
   recommender lives in `models/` and consumes hardware profiles.
+
+### Public facade
 
 The top-level `Hestia/__init__.py` is the public facade; subpackage
 `__init__.py` files re-export their supported names.

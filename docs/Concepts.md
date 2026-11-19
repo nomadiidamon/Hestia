@@ -12,7 +12,7 @@ checks, and advises on models based on observed hardware. Applications decide
 what to do about the results. It covers three independent information areas:
 
 - **Hardware:** CPU, RAM, GPUs/accelerators, VRAM and platform.
-- **Software:** caller-configured dependency checks, aggregated health reports,
+- **Software:** configured CLI inventory, caller-configured dependency checks, aggregated health reports,
   and caller-authorized installation through supplied backends.
 - **AI models:** a catalog of models suited to each hardware tier, plus
   recommendations.
@@ -70,12 +70,17 @@ repairs. Its `failed_dependencies` list contains all unsatisfied registered
 dependencies, including optional ones; `healthy` is false only for required
 unsatisfied dependencies or error-severity diagnostics.
 
-This is not yet whole-system software analysis or an inventory of installed
-applications and commands. Catalog-based software inventory is planned for
-the next implementation phase. Until then, only dependencies explicitly
-registered by the caller are checked. Command checks locate the named command
-on `PATH`; they run a version query only when the caller supplies its arguments.
+Only dependencies explicitly registered by the caller are checked. Command
+checks locate the named command on `PATH`; they run a version query only when
+the caller supplies its arguments.
 The caller can also supply a parser, and the subprocess is bounded by a timeout.
+
+### Software inventory
+
+`detect_software()` inventories configured command names on `PATH`, including
+missing tools and version-probe outcomes; it is not a complete inventory of
+installed applications. Inventory is independent of the dependency checks
+described in [Software dependencies and diagnostics](#software-dependencies-and-diagnostics).
 
 ### Installation
 
@@ -119,7 +124,7 @@ an input to the recommender.
 | Dependency checks | `Hestia.software.dependency` |
 | Doctor reports | `Hestia.software.doctor` |
 | Caller-authorized installation | `Hestia.software.installer` |
-| General software inventory | Not implemented |
+| Configured CLI inventory | `Hestia.detect_software`, `Hestia.software.SoftwareDefinition` |
 | Recommendation | `Hestia.models.ModelRecommender`, `ModelRecommendation`, `ModelRecommendationWeight` |
 
 The C++ implementation is a placeholder; the Python implementation is the
