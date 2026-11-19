@@ -8,7 +8,7 @@ import re
 from typing import TYPE_CHECKING, AbstractSet, Optional
 
 from ..recommender import Recommendation, RecommendationWeight, Recommender
-from ..types import ModelSize
+from ..types import AcceleratorType, ModelSize
 from .catalog import MODEL_CATALOG
 from .info import ModelInfo
 from .model_catalog import ModelCatalog, ModelRecord
@@ -251,6 +251,14 @@ def print_hardware_report(
             print(f"       PCI vendor: {item.pci_vendor_id if item.pci_vendor_id is not None else 'n/a'}")
             print(f"       PCI device: {item.pci_device_id if item.pci_device_id is not None else 'n/a'}")
             print(f"       PNP device: {item.pnp_device_id if item.pnp_device_id is not None else 'n/a'}")
+            if item.accelerator is AcceleratorType.APPLE_METAL:
+                working_set = item.metal_recommended_working_set_gb
+                working_set_text = f"{working_set:.1f} GB" if working_set is not None else "n/a"
+                families = ", ".join(item.metal_gpu_families) if item.metal_gpu_families else "n/a"
+                registry = item.metal_registry_id if item.metal_registry_id is not None else "n/a"
+                print(f"       Metal recommended working set: {working_set_text}")
+                print(f"       Metal GPU families:            {families}")
+                print(f"       Metal registry ID:             {registry}")
     else:
         print("\nGPU:       None detected - CPU only")
     print(f"\nPlatform:  {profile.platform_name} {profile.platform_version}")

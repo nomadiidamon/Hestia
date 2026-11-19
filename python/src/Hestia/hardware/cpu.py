@@ -1,9 +1,14 @@
 """CPU information discovery."""
 
+import logging
 import platform
 from pathlib import Path
+import subprocess
 
 import psutil
+
+logger = logging.getLogger(__name__)
+_CPU_ARCHITECTURE_NAMES = {"arm", "arm64", "aarch64", "i386", "i686", "x86_64"}
 
 
 def detect_cpu() -> dict:
@@ -17,6 +22,22 @@ def detect_cpu() -> dict:
         frequency_ghz = 0.0
 
     brand = platform.processor().strip() or "Unknown"
+    if platform.system() == "Darwin" and brand.lower() in _CPU_ARCHITECTURE_NAMES:
+        try:
+            result = subprocess.run(
+                ["sysctl", "-n", "machdep.cpu.brand_string"],
+                capture_output=True,
+                text=True,
+                timeout=2,
+                check=False,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                brand = result.stdout.strip()
+            else:
+                logger.debug("macOS CPU brand probe returned no value")
+        except (OSError, subprocess.SubprocessError) as error:
+            logger.debug("macOS CPU brand probe failed: %s", error)
+
     if brand == "Unknown" and platform.system() == "Linux":
         try:
             for line in Path("/proc/cpuinfo").read_text(encoding="utf-8").splitlines():

@@ -69,6 +69,25 @@ AMD GPU UUIDs are similarly obtained through the optional HIP runtime, when
 its beta UUID API supports the device. Both runtimes must be discoverable by
 the system library loader; otherwise UUIDs remain unknown.
 
+On macOS, the CPU brand is read from `sysctl` when Python reports only a
+generic architecture name. Apple GPU memory is shared with system RAM, so the
+profile uses a memory amount only when `system_profiler` reports one; otherwise
+total GPU memory is 0 GB and free GPU memory is unknown. When a Metal device
+can be uniquely matched by name to a `system_profiler` GPU, three additional
+fields are available:
+
+- `metal_recommended_working_set_gb`: Metal's estimated performance threshold,
+  not dedicated or free VRAM and not used in the model-memory estimate.
+- `metal_gpu_families`: the highest supported family in each checked group
+  (Apple 1-10, Mac 1-2, Common 1-3, and Metal 3-4), not CUDA compute capability.
+- `metal_registry_id`: a Metal registry identifier, not a UUID or guaranteed
+  persistent hardware identifier.
+
+These fields are `None` when unavailable or ambiguous. A family list can be
+empty when none of the checked families are supported. Apple silicon GPUs do
+not expose PCI/PNP identifiers through this probe, and macOS does not report a
+separate graphics driver version here.
+
 Currently only caller-registered dependencies are checked; whole-system
 software analysis is planned for the next implementation phase, which will add
 a software catalog. Built-in checks cover Python packages,

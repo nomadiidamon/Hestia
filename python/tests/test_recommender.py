@@ -154,6 +154,24 @@ def test_report_includes_gpu_identifiers_and_unknown_values(capsys):
         assert any(label in line and "n/a" in line for line in output.splitlines())
 
 
+def test_report_distinguishes_metal_values_from_vram_and_uuid(capsys):
+    profile = HardwareProfile(gpus=[
+        GPUInfo(0, "Apple M1", AcceleratorType.APPLE_METAL, 0, None,
+                metal_recommended_working_set_gb=10.5,
+                metal_gpu_families=["Apple 7", "Mac 2"], metal_registry_id=42),
+        GPUInfo(1, "Unknown", AcceleratorType.APPLE_METAL, 0, None),
+    ])
+    Hestia.print_hardware_report(profile)
+    output = capsys.readouterr().out
+    assert "VRAM:   0.0 GB total  |  n/a free" in output
+    assert "Metal recommended working set: 10.5 GB" in output
+    assert "Metal GPU families:            Apple 7, Mac 2" in output
+    assert "Metal registry ID:             42" in output
+    assert "Metal recommended working set: n/a" in output
+    assert "Metal GPU families:            n/a" in output
+    assert "Metal registry ID:             n/a" in output
+
+
 def test_public_api_and_no_hardware_probing_during_import():
     assert Hestia.detect_hardware
     assert Hestia.HardwareProfile

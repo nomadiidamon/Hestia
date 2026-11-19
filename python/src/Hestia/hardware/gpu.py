@@ -10,7 +10,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from ..types import AcceleratorType
-from . import _hip, _level_zero
+from . import _hip, _level_zero, _metal
 from .profile import GPUInfo
 
 logger = logging.getLogger(__name__)
@@ -216,24 +216,7 @@ def _deduplicate_gpus(gpus: list[GPUInfo]) -> list[GPUInfo]:
                         gpu.pci_bus_id or "unknown", gpu.uuid or "unknown")
     
     # Reassign indices sequentially so all GPUs have clear ordering
-    reindexed = [
-        GPUInfo(
-            index=idx,
-            name=gpu.name,
-            accelerator=gpu.accelerator,
-            total_memory_gb=gpu.total_memory_gb,
-            free_memory_gb=gpu.free_memory_gb,
-            compute_capability=gpu.compute_capability,
-            driver_version=gpu.driver_version,
-            is_available=gpu.is_available,
-            pci_bus_id=gpu.pci_bus_id,
-            uuid=gpu.uuid,
-            pci_vendor_id=gpu.pci_vendor_id,
-            pci_device_id=gpu.pci_device_id,
-            pnp_device_id=gpu.pnp_device_id,
-        )
-        for idx, gpu in enumerate(deduplicated)
-    ]
+    reindexed = [replace(gpu, index=idx) for idx, gpu in enumerate(deduplicated)]
     
     return reindexed
 
@@ -464,12 +447,30 @@ def _detect_apple() -> list[GPUInfo]:
                 accelerator=AcceleratorType.APPLE_METAL,
                 total_memory_gb=total_gb,
                 free_memory_gb=None,
-                driver_version=display.get("spdisplays_metal"),
             ))
-        return gpus
+        return _attach_metal_details(gpus, _metal.metal_devices()) if gpus else gpus
     except (OSError, subprocess.SubprocessError, ValueError, TypeError) as error:
         logger.debug("Apple GPU detection failed: %s", error)
         return []
+
+
+def _attach_metal_details(gpus: list[GPUInfo], devices: list[_metal.MetalDevice]) -> list[GPUInfo]:
+    enriched = []
+    for gpu in gpus:
+        matching_gpus = [other for other in gpus if other.name == gpu.name]
+        matching_devices = [device for device in devices if device.name == gpu.name]
+        if len(matching_gpus) != 1 or len(matching_devices) != 1:
+            logger.debug("Metal device match unavailable or ambiguous for %s", gpu.name)
+            enriched.append(gpu)
+            continue
+        device = matching_devices[0]
+        enriched.append(replace(
+            gpu,
+            metal_recommended_working_set_gb=device.recommended_working_set_gb,
+            metal_gpu_families=device.families,
+            metal_registry_id=device.registry_id,
+        ))
+    return enriched
 
 
 def _parse_memory(value: str) -> float:

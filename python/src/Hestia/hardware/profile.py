@@ -23,6 +23,9 @@ class GPUInfo:
     pci_vendor_id: Optional[str] = None
     pci_device_id: Optional[str] = None
     pnp_device_id: Optional[str] = None
+    metal_recommended_working_set_gb: Optional[float] = None
+    metal_gpu_families: Optional[list[str]] = None
+    metal_registry_id: Optional[int] = None
 
     def to_dict(self) -> dict:
         data = asdict(self)
