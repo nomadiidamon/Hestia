@@ -17,14 +17,22 @@ The C++ implementation has not yet been implemented.
 ```bash
 cd python
 pip install -e .
+hestia report
 ```
+
+The installed `hestia` command also provides `hardware`, `software`, `models`,
+`recommend`, and `scan` views. Add `--json` for machine-readable output; use
+`--no-version-probes` with `software` or `scan` to skip configured version
+commands. See the [Python implementation guide](https://nomadiidamon.github.io/Hestia/python_implementation.html#command-line-interface)
+for supported output formats. Text reports group models by category and show
+each GPU or software tool as a separate record.
 
 #### Software inventory and dependency tooling
 
 Python also provides read-only, caller-configured dependency checks and doctor
 reports, plus installation workflows driven by caller-defined requests and
 injected backends. Installation requires explicit caller authorization.
-Hestia also inventories configured CLI tools; this is not an exhaustive
+Hestia also inventories configured commands; this is not an exhaustive
 installed-software scan. It does not choose
 packages or package managers or install/repair anything as a side effect of a
 check or report. See the [Python implementation

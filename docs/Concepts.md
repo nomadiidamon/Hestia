@@ -82,6 +82,16 @@ missing tools and version-probe outcomes; it is not a complete inventory of
 installed applications. Inventory is independent of the dependency checks
 described in [Software dependencies and diagnostics](#software-dependencies-and-diagnostics).
 
+### Command-line interface
+
+The Python package also installs the `hestia` command. Its `hardware`,
+`software`, `models`, `recommend`, `report`, and `scan` commands expose the
+existing domain APIs; each supports JSON output. Software version probes are
+enabled by default for `software` and `scan`, and can be disabled with
+`--no-version-probes`. The CLI does not install or repair software.
+See the [Python implementation guide](https://nomadiidamon.github.io/Hestia/python_implementation.html#command-line-interface)
+for output shapes and usage.
+
 ### Installation
 
 `Installer` plans caller-defined actions against registered dependency results

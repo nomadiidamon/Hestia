@@ -15,7 +15,14 @@ System discovery, hardware analysis, reusable software dependency checks, and AI
 ```bash
 cd python
 pip install -e .
+hestia report
 ```
+
+The `hestia` command also provides independent `hardware`, `software`, `models`,
+`recommend`, and `scan` views; add `--json` for machine-readable output. See the
+[Python implementation guide](https://nomadiidamon.github.io/Hestia/python_implementation.html#command-line-interface)
+for output formats and the version-probe opt-out. Text reports group model
+names by category and show each GPU or software tool as a separate record.
 
 #### Software inventory and dependency tooling
 

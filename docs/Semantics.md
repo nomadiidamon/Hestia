@@ -25,6 +25,21 @@ outcomes.
   detecting hardware through the recommendation helper loads hardware on demand.
 - The three information areas are independently callable.
 
+### Command-line interface
+
+- The installed `hestia` command is a presentation layer over the public Python
+  APIs; detection, version parsing, and recommendation decisions remain in
+  their domain modules.
+- Every command accepts `--json`. `hardware`, `software`, `models`, and
+  `recommend` serialize the corresponding API result; `report` returns
+  hardware plus its recommendation, and `scan` returns hardware plus software.
+- Text output groups model names under category headings, one name per bullet;
+  hardware GPUs and software tools are shown as separate records. JSON output
+  retains profile records and recommendation/catalog lists as arrays.
+- `software` and `scan` run the configured software version probes by default.
+  `--no-version-probes` disables those subprocesses. The CLI does not install
+  or repair software.
+
 ### Catalog lookup
 
 - **Tier resolution:** `get_tier(accelerator, size)` returns the exact entry
@@ -73,7 +88,7 @@ outcomes.
 - `Hestia.model_catalog` remains importable and exposes the same names as
   `Hestia.models.catalog`.
 - Enum values (for example `"nvidia_cuda"`, `"tiny"`) are part of the public
-  contract and do not change within a `0.3.x` release.
+  contract and do not change within a `0.5.x` release.
 
 ### Hardware detection
 
@@ -81,9 +96,9 @@ These apply to the implemented hardware package:
 
 - Each CPU, memory, platform, and GPU probe is best-effort; unavailable data
   degrades to documented defaults and does not invalidate unrelated fields.
-- Optional tools and libraries (NVML, Intel Level Zero, AMD HIP and `rocm-smi`)
-  being absent is not an error. See the platform subsections below for
-  additional optional tools.
+- Optional tools and libraries (NVML, `nvidia-smi`, Intel Level Zero, AMD HIP
+  and `rocm-smi`) being absent is not an error. See the platform subsections
+  below for additional optional tools.
 - GPU PCI vendor and device IDs use lowercase hexadecimal strings such as
   `0x8086` when available.
 - PCI bus addresses use hexadecimal `domain:bus:device.function` when the
@@ -110,6 +125,8 @@ These apply to the implemented hardware package:
 #### Windows
 
 - PowerShell being absent is not an error.
+- When NVML finds no NVIDIA devices, GPU discovery tries `nvidia-smi` as a
+  fallback; it runs without a shell and has a timeout.
 - PnP device instance IDs are exposed separately as `pnp_device_id`; they are
   not GPU UUIDs.
 - A single-segment PCI location omits the domain, so it is reported as

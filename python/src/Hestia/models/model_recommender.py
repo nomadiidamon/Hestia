@@ -226,9 +226,6 @@ def print_hardware_report(
     recommendation: Optional[ModelRecommendation] = None,
 ) -> None:
     """Print a human-readable hardware summary and optional recommendation.
-
-    @bug Custom recommendation categories are omitted from the report.
-    @todo Include custom categories when printing recommendations.
     """
     print("\n" + "=" * 50)
     print("[SYS] Hardware")
@@ -274,11 +271,30 @@ def print_hardware_report(
         print(f"Batch size:   {recommendation.batch_size}")
         print(f"Max context:  {recommendation.max_context_tokens:,} tokens")
         print(f"Performance:  {recommendation.estimated_performance}")
-        print(f"\nGeneral:      {', '.join(recommendation.recommended_models)}")
-        if recommendation.thinking_models:
-            print(f"Thinking:     {', '.join(recommendation.thinking_models)}")
-        if recommendation.tool_models:
-            print(f"Tool use:     {', '.join(recommendation.tool_models)}")
-        if recommendation.vision_models:
-            print(f"Vision:       {', '.join(recommendation.vision_models)}")
-        print(f"\nReasoning:    {recommendation.reasoning}")
+        categories = [
+            ("General", recommendation.recommended_models),
+            ("Thinking", recommendation.thinking_models),
+            ("Tool use", recommendation.tool_models),
+            ("Vision", recommendation.vision_models),
+        ]
+        known_categories = {"models", "thinking", "tools", "vision"}
+        categories.extend(
+            (name.replace("_", " ").title(), models)
+            for name, models in recommendation.categories.items()
+            if name not in known_categories
+        )
+        populated_categories = [(name, models) for name, models in categories if models]
+        if populated_categories:
+            for name, models in populated_categories:
+                print(f"\n{name}:")
+                for model in models:
+                    print(f"  - {model}")
+        else:
+            print("\nModels: none")
+
+        print("\nReasoning:")
+        if recommendation.reasoning:
+            for reason in recommendation.reasoning.split(" | "):
+                print(f"  - {reason}")
+        else:
+            print("  (not provided)")

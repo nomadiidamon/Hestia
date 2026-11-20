@@ -22,6 +22,42 @@ python -m pip install "hestia-system[nvidia]"  # NVIDIA telemetry support
 python -m pip install "hestia-system[dev]"     # pytest
 ```
 
+## Command-line interface
+
+The `hestia` command provides independent hardware, software, and model
+catalog views:
+
+```bash
+hestia scan
+hestia hardware
+hestia software --no-version-probes
+hestia models
+hestia recommend
+hestia report
+```
+
+Commands print readable text by default. Add `--json` after any command for
+machine-readable output:
+
+| Command | JSON output |
+|---|---|
+| `hardware` | Hardware profile |
+| `software` | Configured software profile |
+| `models` | List of model catalog entries |
+| `recommend` | Model recommendation for detected hardware |
+| `report` | Hardware profile and its model recommendation |
+| `scan` | Hardware and configured software profiles |
+
+Software discovery runs version commands for the configured catalog by
+default; a discovered executable may have side effects. Use
+`--no-version-probes` with `software` or `scan` to avoid executing those
+commands. `hestia --help` lists all commands and options. The same interface is
+available as `python -m Hestia.cli`.
+Text catalog and recommendation output groups models by category, with one
+model per bullet. Hardware and software profiles show each GPU or tool as a
+separate record; JSON output preserves these records as nested objects and
+arrays.
+
 ## Usage
 
 ### Hardware and model overview

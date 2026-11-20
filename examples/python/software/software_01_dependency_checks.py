@@ -3,6 +3,7 @@
 Compose read-only checks for common and platform-specific dependencies.
 """
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -86,7 +87,8 @@ def main() -> None:
         version = f" ({result.version})" if result.version else ""
         required = "required" if result.required else "optional"
         print(f"- {name}: {result.status.value}{version}; {required}; {result.message}")
-    print(f"Failed dependencies: {list(report.failed_dependencies)}")
+    print("Failed dependencies:")
+    print(json.dumps(report.failed_dependencies, indent=2))
 
 
 if __name__ == "__main__":

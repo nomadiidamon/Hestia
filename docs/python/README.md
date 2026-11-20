@@ -19,9 +19,36 @@ Implemented: `Hestia.types`, the `Hestia.models` catalog and metadata API,
 `Hestia.hardware` detection/profile APIs, and top-level model recommendations.
 The `Hestia.software.dependency`, `Hestia.software.installer`, and
 `Hestia.software.doctor` frameworks and configured CLI inventory are implemented.
-An exhaustive installed-software inventory, a `hestia` CLI, and software-informed
+The standalone `hestia` CLI and installed console-script entry point are also
+implemented. An exhaustive installed-software inventory and software-informed
 model recommendations are not implemented. The legacy
 `Hestia.model_catalog` path remains available.
+
+### Command-line interface
+
+Install the package to use the `hestia` command:
+
+```bash
+python -m pip install hestia-system
+hestia report
+hestia scan --json
+```
+
+Supported commands are `scan`, `hardware`, `software`, `models`, `recommend`,
+and `report`. They print readable text by default; each accepts `--json`.
+`hardware` and `software` serialize their respective profiles, `models`
+returns a list of catalog entries, and `recommend` returns the recommendation.
+`report` combines hardware and recommendation; `scan` combines hardware and
+configured software. `software` and `scan` run the configured version probes
+by default. Use `--no-version-probes` to avoid executing those discovered
+programs. Text reports group model names by category and display each GPU or
+software tool as a separate record. Use `hestia --help` for command-specific
+options.
+
+The CLI is a presentation layer over the public Python API. It does not
+implement hardware detection, software version parsing, or recommendation
+logic. See the [package guide](../../python/README.md#command-line-interface)
+for details and the [CLI examples](../../examples/README.md#cli-examples).
 
 ### Software tooling
 
@@ -45,6 +72,7 @@ python/
 +-- pyproject.toml     # Static packaging configuration
 +-- setup.py           # Reads metadata from ../project.ini
 +-- src/Hestia/        # Package source
+|   +-- cli.py         # `hestia` console-script command layer
 |   +-- types.py
 |   +-- model_catalog.py   # Legacy path
 |   +-- models/
@@ -154,7 +182,7 @@ are ignored and recorded in `progress_errors`.
 ### Examples
 
 Runnable model and software examples are in `examples/python/models/` and
-`examples/python/software/`.
+`examples/python/software/`. CLI examples are in `examples/python/cli/`.
 
 ## Running Tests
 

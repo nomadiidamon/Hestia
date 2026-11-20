@@ -9,7 +9,8 @@ dependency checks, and AI model recommendations (see
 [Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html)). Hestia is
 extracted from [Domus-AI](https://nomadiidamon.github.io/Domus-AI) but does not depend on it. The Python implementation
 is active; C++ is currently a placeholder. Python can inventory configured
-CLI tools, but does not provide an exhaustive installed-software inventory.
+CLI tools and provides a standalone `hestia` command, but does not provide an
+exhaustive installed-software inventory.
 
 ## Goals
 
@@ -38,7 +39,7 @@ CLI tools, but does not provide an exhaustive installed-software inventory.
 |   +-- tool/               # Standalone CLI tool(s) built from this tree
 |
 +-- python/
-|   +-- pyproject.toml      # Static packaging configuration
+|   +-- pyproject.toml      # Packaging and hestia console-script configuration
 |   +-- setup.py            # Reads shared metadata from ../project.ini
 |   +-- src/Hestia/         # Package source (see "Python Package Layout")
 |   +-- tests/              # pytest suite, including a test that runs every example
@@ -73,18 +74,20 @@ Keeping the two implementations in sibling top-level directories (rather than in
 - Per-language CI jobs can use a `working-directory` scoped to just that tree (see `.github/workflows/build.yml`).
 - It's obvious, from the top level, that this is a dual-language project and where each language's code lives.
 
-## The `src` / `scripts` / `tool` Split (Per Language)
+## Source and Runnable Tools
 
-Both `cpp/` and `python/` follow the same internal three-way split, so the
-convention only needs to be learned once:
+Both implementations keep package/application source separate from developer
+scripts, but their runnable-command layouts differ:
 
 - **`src/`** - the library or application source itself; what gets built
   and/or published.
 - **`scripts/`** - developer-facing scripts that support working on the
   project (build helpers, formatting, codegen, release scripts). Not part of
   the shipped artifact.
-- **`tool/`** - standalone CLI tool(s) built from this language's `src/`,
-  kept separate so "library" and "thing you run" aren't tangled together.
+- **C++ `tool/`** - placeholder CLI tool(s) built from `cpp/src/`.
+- **Python CLI** - shipped with the package as the `hestia` console script,
+  implemented in `python/src/Hestia/cli.py` and registered in
+  `python/pyproject.toml`. It delegates to the Python public API.
 
 See the [C++ implementation guide](https://nomadiidamon.github.io/Hestia/cpp_implementation.html)
 and [Python implementation guide](https://nomadiidamon.github.io/Hestia/python_implementation.html)
@@ -101,6 +104,7 @@ call these tools.
 ```
 python/src/Hestia/
 +-- __init__.py        # Stable public facade
++-- cli.py             # `hestia` console-script command layer
 +-- types.py           # Shared enums: AcceleratorType, ModelSize
 +-- model_catalog.py   # Legacy import path; re-exports models.catalog
 +-- models/            # Typed model catalog and model recommendations
@@ -146,6 +150,8 @@ python/src/Hestia/
 - Nothing in Hestia may import Domus-AI or its subsystems.
 - Generic recommendation contracts live at the package top level; the model
   recommender lives in `models/` and consumes hardware profiles.
+- `cli.py` is a thin presentation layer over the public facade; detection,
+  inventory, and recommendation logic remain in their domain APIs.
 
 ### Public facade
 
@@ -206,7 +212,8 @@ A quick reference for "where does this go":
 | New Python package code | `python/src/` |
 | A dev/build helper script (either language) | `<language>/scripts/` |
 | A sub-package clean/test tool | `python/tools/<subpackage>/` |
-| A new CLI tool | `<language>/tools/` |
+| A new C++ tool | `cpp/tool/` |
+| A Python CLI command | `python/src/Hestia/cli.py`, registered in `python/pyproject.toml` |
 | A runnable usage example | `examples/<language>/` |
 | A concept/behavior for the active implementation and future C++ work | `docs/Concepts.md` or `docs/Semantics.md` |
 | A language-specific build/dev note | `docs/<language>/README.md` |

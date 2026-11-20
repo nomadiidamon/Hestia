@@ -1,5 +1,6 @@
 """Best-effort GPU discovery using installed vendor interfaces."""
 
+import csv
 import importlib
 import json
 import logging
@@ -36,7 +37,10 @@ def detect_gpus(system_name: str | None = None) -> list[GPUInfo]:
     gpus = []
     
     # Probe dedicated GPUs first
-    gpus.extend(_detect_nvidia())
+    nvidia_gpus = _detect_nvidia()
+    if not nvidia_gpus and system_name == "Windows":
+        nvidia_gpus = _detect_nvidia_smi()
+    gpus.extend(nvidia_gpus)
     gpus.extend(_detect_amd())
     if system_name in ("Windows", "Linux"):
         gpus.extend(_detect_intel_windows() if system_name == "Windows" else _detect_intel_linux())
@@ -285,6 +289,66 @@ def _detect_nvidia() -> list[GPUInfo]:
             except Exception:
                 pass
     return gpus
+
+
+def _detect_nvidia_smi() -> list[GPUInfo]:
+    """Use the NVIDIA driver CLI when NVML is unavailable on Windows."""
+    command = (
+        "nvidia-smi",
+        "--query-gpu=name,memory.total,memory.free,driver_version,pci.bus_id,uuid",
+        "--format=csv,noheader,nounits",
+    )
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        if result.returncode != 0:
+            logger.debug(
+                "NVIDIA nvidia-smi query failed with exit status %s: %s",
+                result.returncode,
+                result.stderr.strip(),
+            )
+            return []
+        if not result.stdout.strip():
+            return []
+
+        gpus = []
+        for index, row in enumerate(csv.reader(result.stdout.splitlines())):
+            row = [value.strip() for value in row]
+            if len(row) != 6 or not row[0]:
+                logger.debug("Skipping malformed nvidia-smi GPU row: %s", row)
+                continue
+            try:
+                total_memory_gb = int(row[1]) / 1024
+            except ValueError:
+                logger.debug("Skipping nvidia-smi GPU with invalid memory: %s", row[0])
+                continue
+            if total_memory_gb <= 0:
+                continue
+            try:
+                free_memory_gb = int(row[2]) / 1024
+            except ValueError:
+                free_memory_gb = None
+
+            gpus.append(GPUInfo(
+                index=index,
+                name=row[0],
+                accelerator=AcceleratorType.NVIDIA_CUDA,
+                total_memory_gb=total_memory_gb,
+                free_memory_gb=free_memory_gb,
+                driver_version=row[3] if row[3] not in ("", "[N/A]") else None,
+                pci_bus_id=_normalize_pci_bus_id(row[4]),
+                uuid=row[5] if row[5] not in ("", "[N/A]") else None,
+                pci_vendor_id="0x10de",
+            ))
+        return gpus
+    except (OSError, subprocess.SubprocessError, csv.Error) as error:
+        logger.debug("NVIDIA nvidia-smi detection failed: %s", error)
+        return []
 
 
 def _detect_amd() -> list[GPUInfo]:

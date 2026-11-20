@@ -3,6 +3,9 @@
 Plan and execute caller-authorized installation through an in-memory backend.
 """
 
+import json
+from pprint import pprint
+
 from Hestia.software.dependency import CheckResult, CustomDependency, DependencyRegistry
 from Hestia.software.dependency import DependencyStatus
 from Hestia.software.installer import (
@@ -56,7 +59,8 @@ def main() -> None:
     installer = Installer(registry, {"memory": backend}, timeout_seconds=10)
     plan = installer.plan([request], registry.check_all())
 
-    print(f"Planned actions: {[action.action_id for action in plan.actions]}")
+    print("Planned actions:")
+    print(json.dumps([action.action_id for action in plan.actions], indent=2))
     print("Authorization is supplied by the caller after its own approval step.")
 
     try:
@@ -77,14 +81,17 @@ def main() -> None:
     )
     unsupported_report = Installer(registry, {}).execute(plan, authorization)
     print("Unsupported installation report:")
-    print(unsupported_report.to_dict())
-    print(f"Failed dependencies: {list(unsupported_report.failed_dependencies)}")
+    print(json.dumps(unsupported_report.to_dict(), indent=2))
+    print("Failed dependencies:")
+    print(json.dumps(unsupported_report.failed_dependencies, indent=2))
 
     report = installer.execute(plan, authorization, progress=show_progress)
     print("Installation report:")
-    print(report.to_dict())
-    print(f"Latest action progress: {tracker.actions}")
-    print(f"Failed dependencies: {list(report.failed_dependencies)}")
+    print(json.dumps(report.to_dict(), indent=2))
+    print("Latest action progress:")
+    pprint(tracker.actions)
+    print("Failed dependencies:")
+    print(json.dumps(report.failed_dependencies, indent=2))
     print(f"Post-install check succeeded: {report.succeeded}")
 
 

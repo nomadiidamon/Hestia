@@ -2,6 +2,8 @@
 Constrain model recommendations using a deterministic hardware profile.
 """
 
+import json
+
 from Hestia.hardware import HardwareProfile
 from Hestia.models import ModelRecommendationWeight, recommend_model
 from Hestia.types import AcceleratorType, ModelSize
@@ -16,4 +18,11 @@ weight = ModelRecommendationWeight(
     include_families={"qwen3"},
 )
 recommendation = recommend_model(profile, weight)
-print(recommendation.to_dict())
+data = recommendation.to_dict()
+reasoning = data.pop("reasoning")
+
+print("Recommendation:")
+print(json.dumps(data, indent=2))
+print("\nReasoning:")
+for reason in reasoning.split(" | "):
+    print(f"  - {reason}")

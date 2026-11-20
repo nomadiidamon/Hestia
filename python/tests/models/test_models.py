@@ -113,7 +113,7 @@ def test_release_version_matches_shared_metadata_and_docs():
         for line in doxyfile.splitlines()
         if line.strip().startswith("PROJECT_NUMBER")
     )
-    assert Hestia.__version__ == "0.4.0"
+    assert Hestia.__version__ == "0.5.0"
     assert metadata["project"]["version"] == Hestia.__version__
     assert doxy_version == Hestia.__version__
 

@@ -9,8 +9,8 @@ C++ implementation is not yet implemented. See
 
 ## Example locations
 
-- `examples/cpp/` — examples for the C++ implementation placeholder.
-- `examples/python/` — runnable examples using the Python implementation and `python/src/`.
+- `examples/cpp/` - examples for the C++ implementation placeholder.
+- `examples/python/` - runnable examples using the Python implementation and `python/src/`.
 
 Each example should be small and focused on one concept from
 [Concepts](https://nomadiidamon.github.io/Hestia/Concepts.html). Keep examples aligned across
@@ -36,7 +36,7 @@ catalog. See [Hardware examples](#hardware-examples) for profile detection.
 
 ## Software examples
 
-The software examples cover configured CLI detection, profile serialization,
+The software examples cover configured command inventory, profile serialization,
 custom software catalogs, read-only dependency checks, caller-authorized
 installer workflows, and doctor diagnostics with delegated repair. Installation
 backends are in-memory demonstrations and do not modify the host system. The
@@ -45,16 +45,22 @@ is not an exhaustive installed-software scan. See
 [Software inventory](../python/README.md#software-inventory) for its scope.
 Checks do not repair anything.
 
+## CLI examples
+
+`examples/python/cli/cli_01_report_json.py` runs the Hestia report command
+through its Python module entry point and prints JSON. Run the example directly
+or use `examples/python/run_cli.py`.
+
 ## Running Python examples
 
 Run one Python example area with `examples/python/run_hardware.py`,
-`run_models.py`, `run_recommendations.py` or `run_software.py`. Run
-`examples/python/run_all.py` to run all four area runners. The matching
+`run_models.py`, `run_recommendations.py`, `run_software.py` or `run_cli.py`.
+Run `examples/python/run_all.py` to run all five area runners. The matching
 `python/scripts/run_hardware_examples`, `run_models_examples`,
 `run_recommendations_examples` and `run_software_examples` wrappers are
-available for each platform; `run_examples` runs all areas. The wrappers set `PYTHONPATH` and pause before
-exiting. When running Python scripts directly, set `PYTHONPATH` to `python/src`
-or install the package first.
+available for each platform; `run_examples` runs all areas. The wrappers set
+`PYTHONPATH` and pause before exiting. When running Python scripts directly,
+set `PYTHONPATH` to `python/src` or install the package first.
 
 ### Windows
 

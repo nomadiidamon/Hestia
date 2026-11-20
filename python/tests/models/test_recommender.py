@@ -131,6 +131,38 @@ def test_recommendation_serialization_and_report(capsys):
     assert "[REC] Model Recommendation" in output
 
 
+def test_report_formats_model_lists_and_includes_custom_categories(capsys):
+    profile = HardwareProfile()
+    recommendation = ModelRecommendation(
+        model_size=ModelSize.SMALL,
+        recommended_models=["general-a", "general-b"],
+        thinking_models=[],
+        tool_models=["tool-a"],
+        vision_models=[],
+        max_context_tokens=8192,
+        quantization_level="q4_k_m",
+        batch_size=2,
+        estimated_performance="Fast",
+        reasoning="Memory budget: 4GB | CPU-only",
+        categories={
+            "models": ["general-a", "general-b"],
+            "thinking": [],
+            "tools": ["tool-a"],
+            "vision": [],
+            "code_generation": ["coder-a", "coder-b"],
+        },
+    )
+
+    Hestia.print_hardware_report(profile, recommendation)
+    output = capsys.readouterr().out
+    assert "General:\n  - general-a\n  - general-b" in output
+    assert "Tool use:\n  - tool-a" in output
+    assert "Code Generation:\n  - coder-a\n  - coder-b" in output
+    assert "Thinking:" not in output
+    assert "Vision:" not in output
+    assert "Reasoning:\n  - Memory budget: 4GB\n  - CPU-only" in output
+
+
 def test_report_includes_gpu_identifiers_and_unknown_values(capsys):
     profile = HardwareProfile(gpus=[
         GPUInfo(0, "GPU", AcceleratorType.NVIDIA_CUDA, 8, 0,

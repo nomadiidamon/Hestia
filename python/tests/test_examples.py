@@ -125,3 +125,36 @@ def test_simulated_gpu_examples_show_both_scenarios():
     assert "GPUs (2 detected)" in result.stdout
     assert "GPU-example-1" in result.stdout
     assert "GPU-example-2" in result.stdout
+
+
+def test_constrained_recommendation_example_indents_reasoning():
+    example = ROOT / "examples" / "python" / "recommendations" / "recommendation_02_constraints.py"
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(SRC), os.environ.get("PYTHONPATH", "")])}
+    result = subprocess.run(
+        [sys.executable, str(example)], capture_output=True, text=True, timeout=60, env=env
+    )
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.splitlines()
+    reasoning = lines[lines.index("Reasoning:") + 1:]
+    assert len(reasoning) > 1
+    assert all(line.startswith("  - ") for line in reasoning)
+
+
+def test_live_recommendation_example_formats_model_lists_and_reasoning():
+    example = ROOT / "examples" / "python" / "recommendations" / "recommendation_01_basic.py"
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(SRC), os.environ.get("PYTHONPATH", "")])}
+    result = subprocess.run(
+        [sys.executable, str(example)], capture_output=True, text=True, timeout=60, env=env
+    )
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.splitlines()
+    assert "[REC] Model Recommendation" in lines
+    labels = [label for label in ("General:", "Thinking:", "Tool use:", "Vision:") if label in lines]
+    if not labels:
+        assert "Models: none" in lines
+    for label in labels:
+        assert lines[lines.index(label) + 1].startswith("  - ")
+
+    reasoning = lines[lines.index("Reasoning:") + 1:]
+    assert len(reasoning) > 1
+    assert all(line.startswith("  - ") for line in reasoning)

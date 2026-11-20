@@ -3,6 +3,9 @@
 Aggregate checks and diagnostics, then delegate approved repair to installer.
 """
 
+import json
+from pprint import pprint
+
 from Hestia.software.dependency import CheckResult, CustomDependency, DependencyRegistry
 from Hestia.software.dependency import DependencyStatus
 from Hestia.software.doctor import Diagnostic, DiagnosticSeverity, Doctor
@@ -51,8 +54,9 @@ def main() -> None:
 
     before = doctor.run(diagnostics=runtime_diagnostics)
     print("Initial doctor report:")
-    print(before.to_dict())
-    print(f"Failed dependencies: {list(before.failed_dependencies)}")
+    print(json.dumps(before.to_dict(), indent=2))
+    print("Failed dependencies:")
+    print(json.dumps(before.failed_dependencies, indent=2))
 
     # This action and target come from the application, not from Doctor.
     request = InstallRequest(
@@ -74,14 +78,17 @@ def main() -> None:
     tracker = InstallProgressTracker()
     repair = doctor.repair(installer, plan, authorization, progress=tracker)
     print("Delegated repair report:")
-    print(repair.to_dict())
-    print(f"Latest repair progress: {tracker.actions}")
-    print(f"Failed dependencies: {list(repair.failed_dependencies)}")
+    print(json.dumps(repair.to_dict(), indent=2))
+    print("Latest repair progress:")
+    pprint(tracker.actions)
+    print("Failed dependencies:")
+    print(json.dumps(repair.failed_dependencies, indent=2))
 
     after = doctor.run(diagnostics=runtime_diagnostics)
     print("Doctor report after recheck:")
-    print(after.to_dict())
-    print(f"Failed dependencies: {list(after.failed_dependencies)}")
+    print(json.dumps(after.to_dict(), indent=2))
+    print("Failed dependencies:")
+    print(json.dumps(after.failed_dependencies, indent=2))
     print(f"Application healthy: {after.healthy}")
 
 

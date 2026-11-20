@@ -2,12 +2,81 @@ from types import SimpleNamespace
 
 import pytest
 
+from Hestia.hardware import GPUInfo
 from Hestia.hardware import gpu as gpu_module
+from Hestia.types import AcceleratorType
 
 
 def test_nvidia_probe_is_optional(monkeypatch):
     monkeypatch.setattr(gpu_module.importlib, "import_module", lambda _: (_ for _ in ()).throw(ImportError()))
     assert gpu_module._detect_nvidia() == []
+
+
+def test_nvidia_smi_probe_is_optional(monkeypatch):
+    monkeypatch.setattr(
+        gpu_module.subprocess,
+        "run",
+        lambda *args, **kwargs: (_ for _ in ()).throw(FileNotFoundError()),
+    )
+    assert gpu_module._detect_nvidia_smi() == []
+
+
+def test_nvidia_smi_fallback_detects_windows_gpu_when_nvml_is_unavailable(monkeypatch):
+    monkeypatch.setattr(gpu_module, "_detect_nvidia", lambda: [])
+    monkeypatch.setattr(gpu_module, "_detect_amd", lambda: [])
+    monkeypatch.setattr(gpu_module, "_detect_intel_windows", lambda: [])
+    monkeypatch.setattr(gpu_module, "_detect_integrated_windows", lambda: [])
+    commands = []
+
+    def run(command, **kwargs):
+        commands.append(command)
+        return SimpleNamespace(
+            returncode=0,
+            stdout=(
+                '"NVIDIA GeForce, RTX 5070", 8192, 7168, 555.1, '
+                "00000000:02:00.0, GPU-example\n"
+            ),
+        )
+
+    monkeypatch.setattr(gpu_module.subprocess, "run", run)
+
+    found = gpu_module.detect_gpus(system_name="Windows")
+
+    assert commands == [(
+        "nvidia-smi",
+        "--query-gpu=name,memory.total,memory.free,driver_version,pci.bus_id,uuid",
+        "--format=csv,noheader,nounits",
+    )]
+    assert len(found) == 1
+    assert found[0].name == "NVIDIA GeForce, RTX 5070"
+    assert found[0].accelerator is AcceleratorType.NVIDIA_CUDA
+    assert found[0].total_memory_gb == 8.0
+    assert found[0].free_memory_gb == 7.0
+    assert found[0].driver_version == "555.1"
+    assert found[0].pci_bus_id == "0000:02:00.0"
+    assert found[0].uuid == "GPU-example"
+    assert found[0].pci_vendor_id == "0x10de"
+
+
+def test_nvidia_smi_fallback_is_skipped_when_nvml_finds_gpu(monkeypatch):
+    gpu = GPUInfo(
+        0, "Test NVIDIA", AcceleratorType.NVIDIA_CUDA, 8.0, 6.0,
+        driver_version="555.1",
+    )
+    monkeypatch.setattr(gpu_module, "_detect_nvidia", lambda: [gpu])
+    monkeypatch.setattr(
+        gpu_module,
+        "_detect_nvidia_smi",
+        lambda: pytest.fail("nvidia-smi should not run when NVML finds a GPU"),
+    )
+    monkeypatch.setattr(gpu_module, "_detect_amd", lambda: [])
+    monkeypatch.setattr(gpu_module, "_detect_intel_windows", lambda: [])
+    monkeypatch.setattr(gpu_module, "_detect_integrated_windows", lambda: [])
+
+    found = gpu_module.detect_gpus(system_name="Windows")
+
+    assert len(found) == 1
+    assert found[0].name == "Test NVIDIA"
 
 
 def test_nvidia_probe_parses_device_and_always_shuts_down(monkeypatch):
