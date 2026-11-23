@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from Hestia import cli
+from Hestia.types import AcceleratorType, ModelSize
 
 
 def _profile(data):
@@ -82,12 +83,42 @@ def test_software_text_lists_found_and_missing_tools(monkeypatch, capsys):
 
 def test_models_json_outputs_serialized_catalog(monkeypatch, capsys):
     models = [_profile({"accelerator": "none", "size": "tiny"})]
-    monkeypatch.setattr(cli.Hestia, "get_model_info", lambda: models)
+    calls = []
+
+    def get_model_info(accelerator=None, size=None):
+        calls.append((accelerator, size))
+        return models
+
+    monkeypatch.setattr(cli.Hestia, "get_model_info", get_model_info)
 
     assert cli.main(["models", "--json"]) == 0
+    assert calls == [(None, None)]
     assert json.loads(capsys.readouterr().out) == [
         {"accelerator": "none", "size": "tiny"}
     ]
+
+
+@pytest.mark.parametrize(
+    ("options", "expected"),
+    [
+        (["--accelerator", "nvidia_cuda"], (AcceleratorType.NVIDIA_CUDA, None)),
+        (["--size", "medium"], (None, ModelSize.MEDIUM)),
+        (
+            ["--accelerator", "amd_rocm", "--size", "large"],
+            (AcceleratorType.AMD_ROCM, ModelSize.LARGE),
+        ),
+    ],
+)
+def test_models_passes_optional_filters(monkeypatch, options, expected):
+    calls = []
+    monkeypatch.setattr(
+        cli.Hestia,
+        "get_model_info",
+        lambda accelerator=None, size=None: calls.append((accelerator, size)) or [],
+    )
+
+    assert cli.main(["models", *options]) == 0
+    assert calls == [expected]
 
 
 def test_models_text_lists_catalog_entries(monkeypatch, capsys):
@@ -100,7 +131,7 @@ def test_models_text_lists_catalog_entries(monkeypatch, capsys):
         context=8192,
         performance="Fast",
     )
-    monkeypatch.setattr(cli.Hestia, "get_model_info", lambda: [model])
+    monkeypatch.setattr(cli.Hestia, "get_model_info", lambda *_: [model])
 
     assert cli.main(["models"]) == 0
     assert capsys.readouterr().out.splitlines() == [

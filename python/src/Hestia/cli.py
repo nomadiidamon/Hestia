@@ -11,6 +11,7 @@ import Hestia
 from Auctor.Stylus.Colors import Colors
 
 from ._terminal import styled
+from .types import AcceleratorType, ModelSize
 
 if TYPE_CHECKING:
     from Hestia.models import ModelInfo
@@ -103,6 +104,16 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_probe_option(software)
 
     models = commands.add_parser("models", help="list model catalog entries")
+    models.add_argument(
+        "--accelerator",
+        choices=[accelerator.value for accelerator in AcceleratorType],
+        help="filter by accelerator type",
+    )
+    models.add_argument(
+        "--size",
+        choices=[size.value for size in ModelSize],
+        help="filter by model size",
+    )
     _add_json_option(models)
 
     recommend = commands.add_parser("recommend", help="recommend models for this hardware")
@@ -131,7 +142,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         else:
             _print_software(profile)
     elif args.command == "models":
-        model_results = Hestia.get_model_info()
+        accelerator = AcceleratorType(args.accelerator) if args.accelerator else None
+        size = ModelSize(args.size) if args.size else None
+        model_results = Hestia.get_model_info(accelerator, size)
         models = model_results if isinstance(model_results, list) else [model_results]
         if args.json:
             _write_json([model.to_dict() for model in models])
