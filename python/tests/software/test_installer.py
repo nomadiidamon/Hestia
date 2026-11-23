@@ -1,4 +1,7 @@
+from io import StringIO
 from threading import Event, Thread
+
+from Auctor.Stylus.Spinner import Spinner
 
 import pytest
 
@@ -85,6 +88,25 @@ def test_install_progress_tracker_records_events_during_execution():
 	assert tracker.actions["install-engine"].completed == 1.0
 	assert tracker.actions["install-engine"].message == "Installation finished"
 	assert tracker.actions["install-engine"].status is InstallActionStatus.SUCCEEDED
+
+
+def test_install_progress_tracker_displays_backend_percentages(monkeypatch):
+	messages = []
+	update = Spinner.update
+
+	def record_update(spinner, message):
+		messages.append(message)
+		update(spinner, message)
+
+	monkeypatch.setattr(Spinner, "update", record_update)
+	stream = StringIO()
+	tracker = InstallProgressTracker(display=True, stream=stream)
+	backend = FakeBackend()
+	_, installer, plan, _ = make_install_setup(backend)
+	installer.execute(plan, InstallAuthorization("runtime", frozenset({"install-engine"})), progress=tracker)
+	assert "engine: Fetching (50.0%)" in messages
+	assert "engine: Installation finished (100.0%)" in stream.getvalue()
+	assert not tracker.is_running()
 
 
 def test_install_progress_tracker_can_be_read_while_backend_runs():

@@ -7,6 +7,9 @@ import math
 import re
 from typing import TYPE_CHECKING, AbstractSet, Optional
 
+from Auctor.Stylus.Colors import Colors
+
+from .._terminal import styled
 from ..recommender import Recommendation, RecommendationWeight, Recommender
 from ..types import AcceleratorType, ModelSize
 from .catalog import MODEL_CATALOG
@@ -227,50 +230,53 @@ def print_hardware_report(
 ) -> None:
     """Print a human-readable hardware summary and optional recommendation.
     """
+    def label(text: str) -> str:
+        return styled(text, Colors.OKCYAN)
+
     print("\n" + "=" * 50)
-    print("[SYS] Hardware")
+    print(styled("[SYS] Hardware", Colors.BOLD, Colors.OKCYAN))
     print("=" * 50)
-    print(f"CPU:       {profile.cpu_brand}")
-    print(f"Cores:     {profile.cpu_cores_physical} physical / {profile.cpu_cores_logical} logical")
-    print(f"Frequency: {profile.cpu_frequency_ghz:.2f} GHz")
-    print(f"\nRAM:       {profile.ram_total_gb:.1f} GB total  |  {profile.ram_available_gb:.1f} GB available")
+    print(f"{label('CPU:')}       {profile.cpu_brand}")
+    print(f"{label('Cores:')}     {profile.cpu_cores_physical} physical / {profile.cpu_cores_logical} logical")
+    print(f"{label('Frequency:')} {profile.cpu_frequency_ghz:.2f} GHz")
+    print(f"\n{label('RAM:')}       {profile.ram_total_gb:.1f} GB total  |  {profile.ram_available_gb:.1f} GB available")
     if profile.gpus:
-        print(f"\nGPUs ({len(profile.gpus)} detected):")
+        print("\n" + label('GPUs') + f" ({len(profile.gpus)} detected):")
         for item in profile.gpus:
-            print(f"  [{item.index}] {item.name}")
-            print(f"       Type:   {item.accelerator.value}")
+            print(f"  {label(f'[{item.index}]')} {item.name}")
+            print(f"       {label('Type:')}   {item.accelerator.value}")
             free_vram = f"{item.free_memory_gb:.1f} GB" if item.free_memory_gb is not None else "n/a"
-            print(f"       VRAM:   {item.total_memory_gb:.1f} GB total  |  {free_vram} free")
-            print(f"       Compute:    {item.compute_capability if item.compute_capability is not None else 'n/a'}")
-            print(f"       Driver:     {item.driver_version if item.driver_version is not None else 'n/a'}")
-            print(f"       PCI bus:    {item.pci_bus_id if item.pci_bus_id is not None else 'n/a'}")
-            print(f"       UUID:       {item.uuid if item.uuid is not None else 'n/a'}")
-            print(f"       PCI vendor: {item.pci_vendor_id if item.pci_vendor_id is not None else 'n/a'}")
-            print(f"       PCI device: {item.pci_device_id if item.pci_device_id is not None else 'n/a'}")
-            print(f"       PNP device: {item.pnp_device_id if item.pnp_device_id is not None else 'n/a'}")
+            print(f"       {label('VRAM:')}   {item.total_memory_gb:.1f} GB total  |  {free_vram} free")
+            print(f"       {label('Compute:')}    {item.compute_capability if item.compute_capability is not None else 'n/a'}")
+            print(f"       {label('Driver:')}     {item.driver_version if item.driver_version is not None else 'n/a'}")
+            print(f"       {label('PCI bus:')}    {item.pci_bus_id if item.pci_bus_id is not None else 'n/a'}")
+            print(f"       {label('UUID:')}       {item.uuid if item.uuid is not None else 'n/a'}")
+            print(f"       {label('PCI vendor:')} {item.pci_vendor_id if item.pci_vendor_id is not None else 'n/a'}")
+            print(f"       {label('PCI device:')} {item.pci_device_id if item.pci_device_id is not None else 'n/a'}")
+            print(f"       {label('PNP device:')} {item.pnp_device_id if item.pnp_device_id is not None else 'n/a'}")
             if item.accelerator is AcceleratorType.APPLE_METAL:
                 working_set = item.metal_recommended_working_set_gb
                 working_set_text = f"{working_set:.1f} GB" if working_set is not None else "n/a"
                 families = ", ".join(item.metal_gpu_families) if item.metal_gpu_families else "n/a"
                 registry = item.metal_registry_id if item.metal_registry_id is not None else "n/a"
-                print(f"       Metal recommended working set: {working_set_text}")
-                print(f"       Metal GPU families:            {families}")
-                print(f"       Metal registry ID:             {registry}")
+                print(f"       {label('Metal recommended working set:')} {working_set_text}")
+                print(f"       {label('Metal GPU families:')}            {families}")
+                print(f"       {label('Metal registry ID:')}             {registry}")
     else:
-        print("\nGPU:       None detected - CPU only")
-    print(f"\nPlatform:  {profile.platform_name} {profile.platform_version}")
-    print(f"Python:    {profile.python_version}")
-    print(f"Accelerator: {profile.primary_accelerator.value}")
-    print(f"Available for models: {profile.available_for_models_gb:.1f} GB")
+        print(f"\n{label('GPU:')}       None detected - CPU only")
+    print(f"\n{label('Platform:')}  {profile.platform_name} {profile.platform_version}")
+    print(f"{label('Python:')}    {profile.python_version}")
+    print(f"{label('Accelerator:')} {profile.primary_accelerator.value}")
+    print(f"{label('Available for models:')} {profile.available_for_models_gb:.1f} GB")
     if recommendation is not None:
         print("\n" + "=" * 50)
-        print("[REC] Model Recommendation")
+        print(styled("[REC] Model Recommendation", Colors.BOLD, Colors.OKGREEN))
         print("=" * 50)
-        print(f"Tier:         {recommendation.model_size.value}")
-        print(f"Quantization: {recommendation.quantization_level}")
-        print(f"Batch size:   {recommendation.batch_size}")
-        print(f"Max context:  {recommendation.max_context_tokens:,} tokens")
-        print(f"Performance:  {recommendation.estimated_performance}")
+        print(f"{label('Tier:')}         {recommendation.model_size.value}")
+        print(f"{label('Quantization:')} {recommendation.quantization_level}")
+        print(f"{label('Batch size:')}   {recommendation.batch_size}")
+        print(f"{label('Max context:')}  {recommendation.max_context_tokens:,} tokens")
+        print(f"{label('Performance:')}  {recommendation.estimated_performance}")
         categories = [
             ("General", recommendation.recommended_models),
             ("Thinking", recommendation.thinking_models),
@@ -286,13 +292,13 @@ def print_hardware_report(
         populated_categories = [(name, models) for name, models in categories if models]
         if populated_categories:
             for name, models in populated_categories:
-                print(f"\n{name}:")
+                print("\n" + styled(f"{name}:", Colors.BOLD, Colors.OKGREEN))
                 for model in models:
                     print(f"  - {model}")
         else:
-            print("\nModels: none")
+            print(f"\n{label('Models:')} none")
 
-        print("\nReasoning:")
+        print("\n" + styled("Reasoning:", Colors.BOLD))
         if recommendation.reasoning:
             for reason in recommendation.reasoning.split(" | "):
                 print(f"  - {reason}")

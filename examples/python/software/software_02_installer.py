@@ -3,9 +3,6 @@
 Plan and execute caller-authorized installation through an in-memory backend.
 """
 
-import json
-from pprint import pprint
-
 from Hestia.software.dependency import CheckResult, CustomDependency, DependencyRegistry
 from Hestia.software.dependency import DependencyStatus
 from Hestia.software.installer import (
@@ -34,7 +31,7 @@ class ExampleMemoryBackend:
         )
 
 
-def main() -> None:
+def run_example(*, show_text: bool = True):
     backend = ExampleMemoryBackend()
     registry = DependencyRegistry()
     registry.register(CustomDependency(
@@ -59,40 +56,44 @@ def main() -> None:
     installer = Installer(registry, {"memory": backend}, timeout_seconds=10)
     plan = installer.plan([request], registry.check_all())
 
-    print("Planned actions:")
-    print(json.dumps([action.action_id for action in plan.actions], indent=2))
-    print("Authorization is supplied by the caller after its own approval step.")
+    if show_text:
+        print("Planned actions: " + ", ".join(action.action_id for action in plan.actions))
+        print("Authorization is supplied by the caller after its own approval step.")
 
     try:
         installer.execute(plan, InstallAuthorization("example-runtime", frozenset()))
     except PermissionError as error:
-        print(f"Unapproved execution rejected: {error}")
+        if show_text:
+            print(f"Unapproved execution rejected: {error}")
 
-    tracker = InstallProgressTracker()
+    tracker = InstallProgressTracker(display=False)
 
     def show_progress(event) -> None:
         tracker(event)
         percent = "" if event.completed is None else f" ({event.completed:.0%})"
-        print(f"Progress [{event.action_id}]: {event.message}{percent}")
+        if show_text:
+            print(f"Progress [{event.action_id}]: {event.message}{percent}")
 
     authorization = InstallAuthorization(
         group_id="example-runtime",
         action_ids={"install-example-engine"},
     )
     unsupported_report = Installer(registry, {}).execute(plan, authorization)
-    print("Unsupported installation report:")
-    print(json.dumps(unsupported_report.to_dict(), indent=2))
-    print("Failed dependencies:")
-    print(json.dumps(unsupported_report.failed_dependencies, indent=2))
-
     report = installer.execute(plan, authorization, progress=show_progress)
-    print("Installation report:")
-    print(json.dumps(report.to_dict(), indent=2))
-    print("Latest action progress:")
-    pprint(tracker.actions)
-    print("Failed dependencies:")
-    print(json.dumps(report.failed_dependencies, indent=2))
-    print(f"Post-install check succeeded: {report.succeeded}")
+    if show_text:
+        print("Unsupported installation results:")
+        for action in unsupported_report.actions:
+            print(f"- {action.dependency_name}: {action.status.value}; {action.message}")
+        print("Installation results:")
+        for action in report.actions:
+            print(f"- {action.dependency_name}: {action.status.value}; {action.message}")
+        print("Failed dependencies: " + (", ".join(report.failed_dependencies) or "none"))
+        print(f"Post-install check succeeded: {report.succeeded}")
+    return unsupported_report, report
+
+
+def main() -> None:
+    run_example()
 
 
 if __name__ == "__main__":

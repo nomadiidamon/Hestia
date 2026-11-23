@@ -25,12 +25,14 @@ __all__ = [
 	"SoftwareProfile",
 	"SoftwareTool",
 	"__version__",
+	"configure_logging",
 	"detect_hardware",
 	"detect_software",
 	"get_model_info",
 	"get_system_summary",
 	"print_hardware_report",
 	"recommend_model",
+	"shutdown_logging",
 ]
 
 
@@ -50,7 +52,9 @@ _RECOMMENDER_EXPORTS = {
 
 
 def __getattr__(name: str):
-	if name in _HARDWARE_EXPORTS:
+	if name in {"configure_logging", "shutdown_logging"}:
+		module = import_module(".logging", __name__)
+	elif name in _HARDWARE_EXPORTS:
 		module = import_module(".hardware", __name__)
 	elif name in _SOFTWARE_EXPORTS:
 		module = import_module(".software", __name__)

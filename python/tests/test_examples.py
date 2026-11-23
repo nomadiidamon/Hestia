@@ -1,6 +1,8 @@
 """Run every example script and require a clean exit."""
 
 import os
+import importlib.util
+import json
 import shutil
 import subprocess
 import sys
@@ -11,6 +13,40 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "python" / "src"
 EXAMPLES = sorted((ROOT / "examples" / "python").rglob("*.py"))
+
+FORMAT_PAIRS = [
+    ("hardware/hardware_02_report.py", "hardware/hardware_01_profile.py"),
+    ("hardware/hardware_03_simulated_gpus.py", "hardware/hardware_04_simulated_gpus_json.py"),
+    ("models/models_01_enums.py", "models/models_13_enums_json.py"),
+    ("models/models_05_get_category.py", "models/models_10_category_json.py"),
+    ("models/models_06_model_info.py", "models/models_11_model_info_json.py"),
+    ("models/models_09_custom_catalog.py", "models/models_12_custom_catalog_json.py"),
+    ("recommendations/recommendation_01_basic.py", "recommendations/recommendation_03_basic_json.py"),
+    ("recommendations/recommendation_02_constraints.py", "recommendations/recommendation_04_constraints_json.py"),
+    ("software/software_01_dependency_checks.py", "software/software_09_dependency_checks_json.py"),
+    ("software/software_02_installer.py", "software/software_10_installer_json.py"),
+    ("software/software_03_doctor.py", "software/software_11_doctor_json.py"),
+    ("software/software_04_detection.py", "software/software_05_profile.py"),
+    ("software/software_06_catalog.py", "software/software_08_catalog_json.py"),
+    ("cli/cli_02_report_text.py", "cli/cli_01_report_json.py"),
+]
+
+
+@pytest.mark.parametrize(("text_example", "json_example"), FORMAT_PAIRS)
+def test_example_formats_are_separate(text_example, json_example):
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(SRC), os.environ.get("PYTHONPATH", "")])}
+    directory = ROOT / "examples" / "python"
+    outputs = []
+    for example in (text_example, json_example):
+        result = subprocess.run(
+            [sys.executable, str(directory / example)], capture_output=True, text=True, timeout=60, env=env,
+        )
+        assert result.returncode == 0, result.stderr
+        outputs.append(result.stdout)
+    assert json.loads(outputs[1]) is not None
+    with pytest.raises(json.JSONDecodeError):
+        json.loads(outputs[0])
+    assert not any(line.strip() in ("{", "[") for line in outputs[0].splitlines())
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda p: p.relative_to(ROOT).as_posix())
@@ -158,3 +194,22 @@ def test_live_recommendation_example_formats_model_lists_and_reasoning():
     reasoning = lines[lines.index("Reasoning:") + 1:]
     assert len(reasoning) > 1
     assert all(line.startswith("  - ") for line in reasoning)
+
+
+def test_timed_install_example_reports_every_fraction(monkeypatch):
+    path = ROOT / "examples" / "python" / "software" / "software_07_install_progress.py"
+    spec = importlib.util.spec_from_file_location("install_progress_example", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    delays = []
+    monkeypatch.setattr(module.time, "sleep", delays.append)
+    events = []
+    backend = module.SimulatedBackend()
+    result = backend.install(
+        type("Request", (), {"target": "demo"})(),
+        timeout_seconds=30,
+        report_progress=lambda message, fraction: events.append((message, fraction)),
+    )
+    assert sum(delays) == 15
+    assert [fraction for _, fraction in events] == [second / 15 for second in range(1, 16)]
+    assert result.succeeded and backend.installed

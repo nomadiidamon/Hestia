@@ -18,6 +18,26 @@ languages when a C++ implementation exists.
 
 ## Hardware examples
 
+Examples with both output formats use separate scripts. JSON scripts print one
+JSON value; text scripts print a human-readable report. The format pairs are:
+
+| Area | Text | JSON |
+|---|---|---|
+| Hardware | `hardware_02_report.py` | `hardware_01_profile.py` |
+| Simulated GPUs | `hardware_03_simulated_gpus.py` | `hardware_04_simulated_gpus_json.py` |
+| Model enums | `models_01_enums.py` | `models_13_enums_json.py` |
+| Model categories | `models_05_get_category.py` | `models_10_category_json.py` |
+| Model information | `models_06_model_info.py` | `models_11_model_info_json.py` |
+| Custom model catalog | `models_09_custom_catalog.py` | `models_12_custom_catalog_json.py` |
+| Recommendation | `recommendation_01_basic.py` | `recommendation_03_basic_json.py` |
+| Constrained recommendation | `recommendation_02_constraints.py` | `recommendation_04_constraints_json.py` |
+| Dependency checks | `software_01_dependency_checks.py` | `software_09_dependency_checks_json.py` |
+| Installer | `software_02_installer.py` | `software_10_installer_json.py` |
+| Doctor | `software_03_doctor.py` | `software_11_doctor_json.py` |
+| Software profile | `software_04_detection.py` | `software_05_profile.py` |
+| Custom software catalog | `software_06_catalog.py` | `software_08_catalog_json.py` |
+| CLI report | `cli_02_report_text.py` | `cli_01_report_json.py` |
+
 Python hardware examples demonstrate profile detection, serialization and
 reporting. Hardware probes are best-effort, so examples also run on CPU-only
 systems without optional GPU interfaces.
@@ -44,12 +64,17 @@ library provides no default package-manager backend. Configured CLI inventory
 is not an exhaustive installed-software scan. See
 [Software inventory](../python/README.md#software-inventory) for its scope.
 Checks do not repair anything.
+The `software_07_install_progress.py` example simulates an installation for
+at least 15 seconds, with a live spinner on a terminal and progress lines when
+redirected. It only changes in-memory state, and runs as part of the software
+and all-example runners.
 
 ## CLI examples
 
 `examples/python/cli/cli_01_report_json.py` runs the Hestia report command
-through its Python module entry point and prints JSON. Run the example directly
-or use `examples/python/run_cli.py`.
+through its Python module entry point and prints JSON; `cli_02_report_text.py`
+shows the formatted text report. Run the examples directly or use
+`examples/python/run_cli.py`.
 
 ## Running Python examples
 

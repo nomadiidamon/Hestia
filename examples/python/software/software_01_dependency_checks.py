@@ -3,7 +3,6 @@
 Compose read-only checks for common and platform-specific dependencies.
 """
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -42,7 +41,7 @@ def configured_driver_probe(timeout_seconds: float) -> CheckResult:
     )
 
 
-def main() -> None:
+def build_report():
     example_dir = Path(__file__).resolve().parent
     os.environ.setdefault("HESTIA_EXAMPLE_MODE", "read-only")
 
@@ -81,14 +80,17 @@ def main() -> None:
         ),
     ])
 
-    report = Doctor(registry).run()
+    return Doctor(registry).run()
+
+
+def main() -> None:
+    report = build_report()
     print("Read-only dependency report")
     for name, result in report.dependencies.items():
         version = f" ({result.version})" if result.version else ""
         required = "required" if result.required else "optional"
         print(f"- {name}: {result.status.value}{version}; {required}; {result.message}")
-    print("Failed dependencies:")
-    print(json.dumps(report.failed_dependencies, indent=2))
+    print("Failed dependencies: " + (", ".join(report.failed_dependencies) or "none"))
 
 
 if __name__ == "__main__":

@@ -5,7 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from threading import Lock
-from typing import Callable, Mapping, Protocol, Sequence
+from typing import Callable, Mapping, Protocol, Sequence, TextIO
+
+from Auctor.Stylus.Spinner import Spinner
+from Auctor.Stylus.TTY import TTY
 
 from ..dependency import DependencyRegistry, DependencyResult
 
@@ -68,16 +71,28 @@ class InstallProgress:
 	status: InstallActionStatus | None = None
 
 
-class InstallProgressTracker:
-	"""Keep the most recent progress event for each installation action."""
+class InstallProgressTracker(Spinner):
+	"""Record progress and optionally display backend-reported fractions."""
 
-	def __init__(self) -> None:
+	def __init__(self, *, display: bool | None = None, stream: TextIO | None = None) -> None:
+		super().__init__(stream=stream)
+		self._display = TTY(stream).is_tty() if display is None else display
 		self._lock = Lock()
 		self._actions: dict[str, InstallProgress] = {}
 
 	def __call__(self, event: InstallProgress) -> None:
 		with self._lock:
 			self._actions[event.action_id] = event
+			if self._display:
+				percentage = f" ({event.completed * 100:.1f}%)" if event.completed is not None else ""
+				message = f"{event.dependency_name}: {event.message}{percentage}"
+				self.update(message)
+				if event.status is None:
+					self.start()
+				else:
+					if not self.is_running():
+						self.start()
+					self.stop(message)
 
 	@property
 	def actions(self) -> dict[str, InstallProgress]:

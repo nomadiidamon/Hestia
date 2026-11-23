@@ -27,16 +27,27 @@ with (
 ):
     integrated = gpu.detect_gpus(system_name="Windows")
 
-print("Simulated integrated GPU fallback")
-with patch.object(gpu, "detect_gpus", return_value=integrated):
-    Hestia.print_hardware_report(Hestia.detect_hardware())
-
 multiple = [
     Hestia.GPUInfo(0, "Simulated GPU", AcceleratorType.NVIDIA_CUDA, 8, 6,
                    pci_bus_id="0000:01:00.0", uuid="GPU-example-1"),
     Hestia.GPUInfo(1, "Simulated GPU", AcceleratorType.NVIDIA_CUDA, 8, 4,
                    pci_bus_id="0000:02:00.0", uuid="GPU-example-2"),
 ]
-print("\nSimulated multiple GPUs")
-with patch.object(gpu, "detect_gpus", return_value=multiple):
-    Hestia.print_hardware_report(Hestia.detect_hardware())
+def profiles():
+    with patch.object(gpu, "detect_gpus", return_value=integrated):
+        integrated_profile = Hestia.detect_hardware()
+    with patch.object(gpu, "detect_gpus", return_value=multiple):
+        multiple_profile = Hestia.detect_hardware()
+    return integrated_profile, multiple_profile
+
+
+def main():
+    integrated_profile, multiple_profile = profiles()
+    print("Simulated integrated GPU fallback")
+    Hestia.print_hardware_report(integrated_profile)
+    print("\nSimulated multiple GPUs")
+    Hestia.print_hardware_report(multiple_profile)
+
+
+if __name__ == "__main__":
+    main()

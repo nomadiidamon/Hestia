@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "hestia-system"
 dynamic = ["version", "description", "readme", "license", "authors", "requires-python", "urls"]  # from ../project.ini via setup.py
 dependencies = [
+    "auctor-utils>=0.2.1",
     "psutil>=5.9.0",
     "packaging>=23.0",
 ]

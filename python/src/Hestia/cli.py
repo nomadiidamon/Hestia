@@ -8,6 +8,9 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import Hestia
+from Auctor.Stylus.Colors import Colors
+
+from ._terminal import styled
 
 if TYPE_CHECKING:
     from Hestia.models import ModelInfo
@@ -41,14 +44,14 @@ def _category_label(name: str) -> str:
 
 
 def _print_software(profile: SoftwareProfile) -> None:
-    print(f"Configured software ({len(profile.tools)} tools):")
+    print(styled(f"Configured software ({len(profile.tools)} tools):", Colors.BOLD, Colors.OKCYAN))
     if not profile.tools:
         print("  No configured tools.")
         return
 
     for tool in profile.tools:
         status = tool.version_status.value.replace("_", " ").title()
-        print(f"\n- {tool.name}")
+        print("\n" + styled(f"- {tool.name}", Colors.BOLD))
         print(f"  Status: {status}")
         print(f"  Path: {tool.executable_path or 'not found'}")
         if tool.version is not None:
@@ -58,13 +61,13 @@ def _print_software(profile: SoftwareProfile) -> None:
 
 def _print_models(models: list[ModelInfo]) -> None:
     count_label = "entry" if len(models) == 1 else "entries"
-    print(f"Model catalog ({len(models)} {count_label}):")
+    print(styled(f"Model catalog ({len(models)} {count_label}):", Colors.BOLD, Colors.OKCYAN))
     if not models:
         print("  No catalog entries.")
         return
 
     for index, model in enumerate(models, start=1):
-        print(f"\n[{index}] {model.accelerator.value} / {model.size.value}")
+        print("\n" + styled(f"[{index}] {model.accelerator.value} / {model.size.value}", Colors.BOLD))
         print(f"    Quantization: {model.quantization}")
         print(f"    Batch size: {model.batch_size}")
         print(f"    Context: {model.context:,} tokens")
@@ -78,7 +81,7 @@ def _print_models(models: list[ModelInfo]) -> None:
 
         print("    Models by category:")
         for name, entries in populated_categories:
-            print(f"      {_category_label(name)}:")
+            print(styled(f"      {_category_label(name)}:", Colors.OKGREEN))
             for entry in entries:
                 print(f"        - {entry}")
 

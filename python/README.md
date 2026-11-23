@@ -8,6 +8,7 @@ hardware profiles and reusable dependency, doctor, and installer frameworks.
 These software frameworks are Python-only; C++ is not implemented.
 
 The distribution is named `hestia-system`; import it as `Hestia`.
+The Python package depends on `auctor-utils` for diagnostics and terminal utilities.
 
 ## Installation
 
@@ -57,6 +58,41 @@ Text catalog and recommendation output groups models by category, with one
 model per bullet. Hardware and software profiles show each GPU or tool as a
 separate record; JSON output preserves these records as nested objects and
 arrays.
+Human-readable output uses color when Auctor detects a compatible terminal;
+redirected output and JSON remain plain text.
+
+The example runner at `python/scripts/run_examples.sh` uses the workspace
+source. When running examples directly, install the checkout in editable mode
+with `python -m pip install -e ./python` from the repository root; otherwise
+Python may use an older installed Hestia. The CLI text report example is
+`examples/python/cli/cli_02_report_text.py`; the JSON example is uncolored.
+
+## Diagnostics
+
+Hestia uses standard Python loggers under `Hestia`. To additionally record
+their messages using Auctor Livy, configure a log file explicitly:
+
+```python
+import Hestia
+
+Hestia.configure_logging("logs/hestia.log")
+try:
+  profile = Hestia.detect_hardware()
+finally:
+  Hestia.shutdown_logging()
+```
+
+Configuration does not disable standard logging propagation. Reconfiguring
+closes the previous Livy route, and importing Hestia does not create log files.
+The optional `level` argument accepts Python logging levels and defaults to
+`logging.DEBUG`.
+
+`InstallProgressTracker` records the latest event for each action and displays
+an Auctor spinner on terminals. It shows percentages only when the backend
+reports a fraction, or when an action completes successfully. Pass
+`display=True` or `display=False` to override terminal detection, and `stream`
+to select the output stream. Installation backends must supply intermediate
+fractions for real-time percentage updates.
 
 ## Usage
 

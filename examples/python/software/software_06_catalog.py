@@ -13,7 +13,7 @@ def parse_git_version(output: str) -> str | None:
     return match.group(1) if match else None
 
 
-def main() -> None:
+def detect_custom_catalog():
     catalog = (
         SoftwareDefinition(
             name="git",
@@ -22,7 +22,11 @@ def main() -> None:
             version_parser=parse_git_version,
         ),
     )
-    profile = detect_software(catalog)
+    return detect_software(catalog)
+
+
+def main() -> None:
+    profile = detect_custom_catalog()
     for tool in profile.tools:
         print(f"{tool.name}: {tool.version or tool.version_status.value} ({tool.message})")
 

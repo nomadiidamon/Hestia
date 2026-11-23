@@ -3,9 +3,6 @@
 Aggregate checks and diagnostics, then delegate approved repair to installer.
 """
 
-import json
-from pprint import pprint
-
 from Hestia.software.dependency import CheckResult, CustomDependency, DependencyRegistry
 from Hestia.software.dependency import DependencyStatus
 from Hestia.software.doctor import Diagnostic, DiagnosticSeverity, Doctor
@@ -29,7 +26,7 @@ class InMemoryRuntimeBackend:
         return InstallOutcome(True, "Example runtime enabled in memory")
 
 
-def main() -> None:
+def run_example(*, show_text: bool = True):
     backend = InMemoryRuntimeBackend()
     registry = DependencyRegistry()
     registry.register(CustomDependency(
@@ -53,10 +50,12 @@ def main() -> None:
         ),)
 
     before = doctor.run(diagnostics=runtime_diagnostics)
-    print("Initial doctor report:")
-    print(json.dumps(before.to_dict(), indent=2))
-    print("Failed dependencies:")
-    print(json.dumps(before.failed_dependencies, indent=2))
+    if show_text:
+        print("Initial dependency results:")
+        for name, result in before.dependencies.items():
+            print(f"- {name}: {result.status.value}; {result.message}")
+        for diagnostic in before.diagnostics:
+            print(f"- {diagnostic.severity.value}: {diagnostic.message}")
 
     # This action and target come from the application, not from Doctor.
     request = InstallRequest(
@@ -75,21 +74,23 @@ def main() -> None:
         group_id="example-application",
         action_ids={"configure-example-runtime"},
     )
-    tracker = InstallProgressTracker()
+    tracker = InstallProgressTracker(display=False)
     repair = doctor.repair(installer, plan, authorization, progress=tracker)
-    print("Delegated repair report:")
-    print(json.dumps(repair.to_dict(), indent=2))
-    print("Latest repair progress:")
-    pprint(tracker.actions)
-    print("Failed dependencies:")
-    print(json.dumps(repair.failed_dependencies, indent=2))
-
     after = doctor.run(diagnostics=runtime_diagnostics)
-    print("Doctor report after recheck:")
-    print(json.dumps(after.to_dict(), indent=2))
-    print("Failed dependencies:")
-    print(json.dumps(after.failed_dependencies, indent=2))
-    print(f"Application healthy: {after.healthy}")
+    if show_text:
+        print("Delegated repair results:")
+        for action in repair.actions:
+            print(f"- {action.dependency_name}: {action.status.value}; {action.message}")
+        print("Dependency results after recheck:")
+        for name, result in after.dependencies.items():
+            print(f"- {name}: {result.status.value}; {result.message}")
+        print("Failed dependencies: " + (", ".join(after.failed_dependencies) or "none"))
+        print(f"Application healthy: {after.healthy}")
+    return before, repair, after
+
+
+def main() -> None:
+    run_example()
 
 
 if __name__ == "__main__":
